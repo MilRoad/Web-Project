@@ -30,19 +30,19 @@ def index():
 @app.route('/register', methods=['POST'])
 def register():
     if request.method == 'POST':
-        for i in request.form:
-            print(i)
         first_name = request.form['first_name']
         last_name = request.form['last_name']
         email = request.form['email']
         password = request.form['password']
         phone = request.form['phone']
         name_table = 'programmer' if len(request.form) == 6 else 'customer'
-        print(1)
-        cur.execute(
-            f'insert into {name_table} (email, password, first_name, last_name, phone, stars) values (%s, %s,%s,%s,%s, %s)',
-            (email, password, first_name, last_name, phone, 0))
-        conn.commit()
+        try:
+            cur.execute(
+                f'insert into {name_table} (email, password, first_name, last_name, phone, stars) values (%s, %s,%s,%s,%s, %s)',
+                (email, password, first_name, last_name, phone, 0))
+            conn.commit()
+        except psycopg2.errors.UniqueViolation:
+            return 'По данному email пользователь зарегистрирован'
         print(1)
     return jsonify({'data': 'ok'})
 

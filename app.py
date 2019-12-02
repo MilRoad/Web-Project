@@ -1,6 +1,7 @@
 import psycopg2
 from flask import Flask, render_template, request,jsonify
 import constant
+from werkzeug.security import generate_password_hash,  check_password_hash
 
 app = Flask(__name__)
 
@@ -33,7 +34,8 @@ def register():
         first_name = request.form['first_name']
         last_name = request.form['last_name']
         email = request.form['email']
-        password = request.form['password']
+        password = generate_password_hash(request.form['password'])
+        print(password)
         phone = request.form['phone']
         name_table = 'programmer' if len(request.form) == 6 else 'customer'
         try:
@@ -43,8 +45,12 @@ def register():
             conn.commit()
         except psycopg2.errors.UniqueViolation:
             return 'По данному email пользователь зарегистрирован'
-        print(1)
     return jsonify({'data': 'ok'})
+
+@app.route('/login', methods=['POST'])
+def login():
+    if request.method == 'POST':
+        
 
 
 if __name__ == '__main__':

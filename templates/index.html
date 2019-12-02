@@ -113,16 +113,20 @@
                 <div class="modal-header" style="color: black">
                  <h4 >Регистрация</h4>
                 </div>
-                <form method="post" action="/" style="color:black;">
+                <form method="post" action="/register" style="color:black;">
                   <br>
                   <div style="margin-left: 10%">
-                  <p><input type="text" name="username" value="" placeholder="Имя" style="width: 400px" required pattern="^[a-zA-Zа-яА-Я]+$"></p>
-                  <p><input type="text" name="surname" value="" placeholder="Фамилия"  style="width: 400px" required pattern="^[a-zA-Zа-яА-Я]+$"></p>
+                  <p><input type="text" name="first_name" value="" placeholder="Имя" style="width: 400px" required pattern="^[a-zA-Zа-яА-Я]+$"></p>
+                  <p><input type="text" name="last_name" value="" placeholder="Фамилия"  style="width: 400px" required pattern="^[a-zA-Zа-яА-Я]+$"></p>
                   <p><input type="email" name="email" value="" placeholder="E-mail" style="width: 400px" required></p>
                   <p><input type="password" name="password" value="" placeholder="Пароль" style="width: 400px" required pattern="^[^2-20]+[^!@#$%^&*()_\s]+$"></p>
                   <p><input type="text" name="phone" value="" placeholder="Номер телефона без 8" style="width: 400px" required pattern="[0-9]{10}"></p>
-                </div>
 
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="exampleCheck1" name="is_programmer">
+                        <label class="form-check-label" for="exampleCheck1">Отметьте если вы разработчик</label>
+                      </div>
+                    </div>
                   <br>
                   <div style="margin-left: 24%">
                   <p><button type="submit" class="button button-black"> Зарегистрироваться </button></p>

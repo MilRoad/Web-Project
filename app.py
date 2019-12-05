@@ -1,5 +1,5 @@
 import psycopg2
-from flask import Flask, render_template, request, jsonify, session,redirect
+from flask import Flask, render_template, request, jsonify, session, redirect
 import constant
 from werkzeug.security import generate_password_hash,  check_password_hash
 
@@ -54,12 +54,13 @@ def register():
                 f'insert into {name_table} (email, password, first_name, last_name, phone, stars) values (%s, %s,%s,%s,%s, %s)',
                 (email, password, first_name, last_name, phone, 0))
             conn.commit()
-            # session['email'] = email
+            session['email'] = email
+            session['type'] = name_table
         except psycopg2.errors.UniqueViolation:
             conn.commit()
             return render_template('error_registr.html')
 
-    return redirect('/description')
+    return redirect('/test')
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -82,7 +83,8 @@ def login():
                 return render_template('error_login.html')
             session['email'] = email
             session['type'] = 'customer'
-    return jsonify({'data': session['email']})
+        conn.commit()
+    return redirect('/profile')
 
 @app.route('/logout')
 def logout():
@@ -94,27 +96,123 @@ def logout():
 
 @app.route('/test')
 def test():
+    print(session['type'])
     if session['type'] == 'programmer':
         cur.execute('select description from programmer where email=%s',(session['email'],))
-        if cur.fetchall()[0] == ():
+        if cur.fetchone()[0] is None:
             return redirect('/description')
+        conn.commit()
     return render_template('profile.html')
 
 
 @app.route('/description')
-def test_descr():
-    return render_template('prog_information.html')
+def description():
+    cur.execute('select * from languages')
+    languages = cur.fetchall()
+    cur.execute('select * from areas')
+    areas = cur.fetchall()
+    conn.commit()
+    all_lang = []
+    all_areas = []
+
+    for lang in languages:
+        lang_info = {
+            'id': lang[1],
+            'name': lang[0],
+        }
+        all_lang.append(lang_info)
+
+    for area in areas:
+        area_info = {
+            'name': area[1],
+            'id': area[0],
+        }
+        all_areas.append(area_info)
+
+    return render_template('prog_information.html', languages=all_lang, areas=all_areas)
 
 
 
-@app.route('/ttt',methods=['POST'])
-def ttt():
-    print(request.form.getlist('lang'))
-    print(request.form.getlist('area'))
+@app.route('/interests', methods=['POST'])
+def interests():
+    languages = request.form.getlist('lang')
+    areas = request.form.getlist('area')
+    description = request.form['description']
+    email = session['email']
 
-    print(request.form['description'])
+    for i in areas:
+        cur.execute('select * from areas where id=%s', (i,))
+        area = cur.fetchone()
+        if area != []:
+            cur.execute('select * from programmer_areas where areas_id=%s and programmer_email=%s', (i,email,))
+            if cur.fetchall() == []:
+                cur.execute(
+                    'insert into programmer_areas (programmer_email, areas_id, level) values (%s, %s, %s)',
+                    (email, i, 0))
 
-    return 'ok'
+    for i in languages:
+        cur.execute('select * from languages where id=%s', (i,))
+        lang = cur.fetchone()
+        if lang != []:
+            cur.execute('select * from programmer_languages where languages_id=%s and programmer_email=%s', (i, email,))
+            if cur.fetchall() == []:
+                cur.execute(
+                    'insert into programmer_languages (programmer_email, languages_id, level) values (%s, %s, %s)',
+                    (email, i, 0))
+
+    cur.execute(
+        'update programmer set description=%s where email=%s',
+        (description,email))
+
+    conn.commit()
+    return redirect('/profile')
+
+@app.route('/profile')
+def profile():
+    email = session['email']
+    if session['type'] == 'programmer':
+        sql1 = """
+        SELECT name FROM areas
+        WHERE id IN
+            (SELECT areas_id 
+             FROM programmer_areas
+             WHERE programmer_email=%s)"""
+        sql2 = """
+                SELECT name FROM languages
+                WHERE id IN
+                    (SELECT languages_id 
+                    FROM programmer_languages
+                    WHERE programmer_email=%s)"""
+        sql3 = """
+        SELECT first_name, last_name, description FROM programmer WHERE email=%s"""
+        cur.execute(sql1, (email,))
+        areas = cur.fetchall()
+        cur.execute(sql2, (email,))
+        langs = cur.fetchall()
+        cur.execute(sql3, (email,))
+        person = cur.fetchone()
+        conn.commit()
+
+        all_lang = []
+        all_areas = []
+
+        for i in areas:
+            all_areas.append(i[0])
+        for i in langs:
+            all_lang.append(i[0])
+        name = person[0] + " " + person[1]
+        description = person[2]
+
+        return render_template('profile.html', languages=all_lang, areas=all_areas, name=name, description=description)
+    else:
+        sql4 = """
+                SELECT first_name, last_name FROM customer WHERE email=%s"""
+        cur.execute(sql4, (email,))
+        person = cur.fetchone()
+        conn.commit()
+        name = person[0] + " " + person[1]
+        return render_template('profile.html', name=name)
+
 
 
 

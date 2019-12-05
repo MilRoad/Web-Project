@@ -702,9 +702,13 @@ var BrowserDetect = {
 	                            <img src="https://pbs.twimg.com/profile_images/857551974442651648/D5cZLXTf.jpg" alt="Circle Image" class="img-raised rounded-circle img-fluid">
 	                        </div>
 	                        <div class="name">
-	                            <h3 class="title">Лаисцева Милена</h3>
-                                <span class="label label-warning">python</span>
-                                <span class="label label-info">html</span>
+	                            <h3 class="title">{{ name }}</h3>
+                                {% for lang in languages %}
+                                         <span class="label label-warning">{{ lang }}</span>
+                                {% endfor %}
+                                {% for area in areas %}
+                                         <span class="label label-info">{{ area }}</span>
+                                {% endfor %}
                                 <hr>
 								<a href="#pablo" class="btn btn-just-icon btn-link btn-dribbble"><i class="fa fa-dribbble"></i></a>
                                 <a href="#pablo" class="btn btn-just-icon btn-link btn-twitter"><i class="fa fa-twitter"></i></a>
@@ -714,7 +718,7 @@ var BrowserDetect = {
     	            </div>
                 </div>
                 <div class="description text-center">
-                    <p>Тут пользователь рассказывает о себе </p>
+                    <p>{{ description }}</p>
                 </div>
 				<div class="row">
 					<div class="col-md-6 ml-auto mr-auto">

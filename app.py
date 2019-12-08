@@ -206,7 +206,7 @@ def profile():
         session['languages'] = all_lang
         session['areas'] = all_areas
 
-        return render_template('profile.html', languages=all_lang, areas=all_areas, name=name, description=description)
+        return render_template('profile.html', languages=all_lang, areas=all_areas, name=name, description=description, status=session['type'])
     else:
         sql4 = """
                 SELECT first_name, last_name FROM customer WHERE email=%s"""
@@ -214,13 +214,10 @@ def profile():
         person = cur.fetchone()
         conn.commit()
         name = person[0] + " " + person[1]
-        return render_template('profile.html', name=name)
+        return render_template('profile.html', name=name, status=session['type'])
 
-@app.route('/create_orders')
-def create_orders():
-    return redirect('/orders')
 
-@app.route('/orders', methods=['POST'])
+@app.route('/create_orders', methods=['GET'])
 def orders():
     cur.execute('select * from languages')
     languages = cur.fetchall()
@@ -244,7 +241,7 @@ def orders():
         }
         all_areas.append(area_info)
 
-    return render_template('orders_inf.html', languages=all_lang, areas=all_areas)
+    return render_template('create_orders.html', languages=all_lang, areas=all_areas)
 
 @app.route('/add_orders', methods=['POST'])
 def add_orders():
@@ -253,9 +250,8 @@ def add_orders():
     areas = request.form.getlist('area')
     description = request.form['description']
 
-    cur.execute('insert into orders (description, customer_email) values (%s, %s)', (description, email))
-    order_id = cur.lastrowid
-    conn.commit()
+    cur.execute('insert into orders (description, customer_email) values (%s, %s) returning id ', (description, email))
+    order_id = cur.fetchone()[0]
 
     for i in areas:
         cur.execute('select * from areas where id=%s', (i,))
@@ -266,7 +262,7 @@ def add_orders():
                 cur.execute(
                     'insert into orders_areas (orders_id, areas_id) values (%s, %s)',
                     (order_id, i))
-                conn.commit()
+
 
     for i in languages:
         cur.execute('select * from languages where id=%s', (i,))
@@ -277,10 +273,10 @@ def add_orders():
                 cur.execute(
                     'insert into orders_languages (orders_id, languages_id) values (%s, %s)',
                     (order_id, i))
-
+    conn.commit()
     return redirect('/profile')
 
-@app.route('/find_order', methods=['POST'])
+@app.route('/find_order', methods=['GET'])
 def find_order():
     email = session['email']
     if email == 'programmer':
@@ -325,7 +321,7 @@ def find_order():
             all_orders.append(order_info)
             conn.commit()
 
-    return render_template("orders.html", orders=all_orders)
+    return render_template("tasks.html", orders=all_orders)
 
 @app.route('/order_info/<int:order_id>', methods=['GET'])
 def order_info(order_id):

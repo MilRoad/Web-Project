@@ -213,8 +213,8 @@ p {
 
 .nav-pills .nav-item .nav-link.active {
     color: #fff;
-    background-color: #000000;
-    box-shadow: 0 5px 20px 0 rgba(0,0,0,.2), 0 15px 24px -11px rgba(18,83,68,1);
+    background-color: #9c27b0;
+    box-shadow: 0 5px 20px 0 rgba(0,0,0,.2), 0 13px 24px -11px rgba(156,39,176,.6);
 }
 
 .nav-pills .nav-item .nav-link {
@@ -415,11 +415,27 @@ footer p a:hover {
 }
     span {
         padding: 10px 15px; /* Поля в кнопке */
-    background: #2ed3ae; /* Цвет фона кнопки */
+    background: #1d8924; /* Цвет фона кнопки */
     color: #fff; /* Цвет текста */
     border: 1px solid #fff; /* Параметры рамки */
     border-radius: 5px; /* Радиус скругления */
     }
+
+    .column {
+  float: left;
+  padding: 10px;
+  height: 300px; /* Should be removed. Only for demonstration */
+}
+
+.left {
+  width: 50%;
+}
+
+.right {
+  width: 50%;
+}
+
+/* Clear floats after the columns */
 </style>
 
     <script>
@@ -696,113 +712,57 @@ var BrowserDetect = {
 		<div class="profile-content">
             <div class="container">
                 <div class="row">
-	                <div class="col-md-6 ml-auto mr-auto">
-        	           <div class="profile">
-	                        <div class="avatar">
-	                            <img src="https://pbs.twimg.com/profile_images/857551974442651648/D5cZLXTf.jpg" alt="Circle Image" class="img-raised rounded-circle img-fluid">
-	                        </div>
-	                        <div class="name">
-	                            <h3 class="title">{{ name }}</h3>
+                <form method="post" action="/add_orders" class="col-md-10 ml-auto mr-auto">
 
-                            {% if status == 'programmer' %}
-                                {% for lang in languages %}
-                                         <span class="label label-warning">{{ lang }}</span>
-                                {% endfor %}
-                                <br>
-                                <br>
-                                {% for area in areas %}
-                                         <span class="label label-info" style="background-color: mediumpurple;">{{ area }}</span>
-                                {% endfor %}
-                            {% endif %}
-                                <hr>
-                            {% if status == 'customer' %}
-                               <a href="/create_orders"> <span class="label label-warning"> Добавить заказ</span></a>
-                            {% endif %}
-                            {% if status == 'programmer' %}
-								<a href="#pablo" class="btn btn-just-icon btn-link btn-dribbble"><i class="fa fa-dribbble"></i></a>
-                                <a href="#pablo" class="btn btn-just-icon btn-link btn-twitter"><i class="fa fa-twitter"></i></a>
-                                <a href="#pablo" class="btn btn-just-icon btn-link btn-pinterest"><i class="fa fa-pinterest"></i></a>
-                            {% endif %}
-	                        </div>
-	                    </div>
+                    <div class="column left">
+	                <div class="col-md-4 ml-auto mr-auto" style="text-align:  left; margin-left: 33%">
+                        <h1>Языки</h1>
+                        {% for lang in languages %}
+                             <label class="form-check-inline" >
+                                <input class="form-check-input" type="checkbox" id="Checkbox1" name="lang" value="{{ lang.id }}"> {{ lang.name }}
+                             </label>
+                        {% endfor %}
     	            </div>
-                </div>
-            {% if status == 'programmer' %}
-                <div class="description text-center">
-                    <p style="color: gray;font-size: 100%;font-style: italic;">{{ description }}</p>
-                </div>
-            {% endif %}
-				<div class="row">
-					<div class="col-md-6 ml-auto mr-auto">
-                        <div class="profile-tabs">
-                          <ul class="nav nav-pills nav-pills-icons justify-content-center" role="tablist">
+                    </div>
+                    <div class="column right" >
+                    <div class="col-md-4 ml-auto mr-auto" style="text-align:  left; margin-left: 66%">
 
-                            <li class="nav-item">
-                                <a class="nav-link active" href="#work" role="tab" data-toggle="tab">
-                                  <i class="material-icons">build</i>
-                                  В разработке
-                                </a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link" href="#finish" role="tab" data-toggle="tab">
-                                  <i class="material-icons">archive</i>
-                                    Сделанные
-                                </a>
-                            </li>
-
-                              <li class="nav-item">
-                                <a class="nav-link" href="#waiting" role="tab" data-toggle="tab">
-                                  <i class="material-icons">cached</i>
-                                    Ожидание
-                                </a>
-                            </li>
+                        <h1>Области</h1>
+                        {% for area in areas %}
+                             <label class="form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="inlineCheckbox1" name="area" value="{{ area.id }}"> {{ area.name }}
+                             </label>
+                        {% endfor %}
+    	            </div>
+                    </div>
+                    <br><br><br><br>
+                <br><br><br><br>
+                <br><br>
+                <br><br>
+                <br><br>
+                <br><br>
+                <br><br>
 
 
 
 
-                          </ul>
-                        </div>
-    	    	</div>
-            </div>
 
-          <div class="tab-content tab-space">
-            <div class="tab-pane active text-center gallery" id="work">
-  				<div class="media border p-3">
-                  <div class="media-body">
-                    <h4>Название нынешних проектов </h4>
-                    <p>Немножки про этот проект</p>
+                    <div  style="text-align:  center;">
 
-                  </div>
-                     <a href="/" style="text-decoration: none;"><span class="label label-warning">Подробнее</span></a>
-                </div>
-  			</div>
+                        <h1>Описание заказа</h1>
+                        <div class="form-group">
+                        <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" name="description"></textarea>
+                      </div>
+                    </div>
 
-
-
-            <div class="tab-pane text-center gallery" id="finish">
-      				<div class="media border p-3">
-                  <div class="media-body">
-                    <h4>Название завершенных проектов</h4>
-                    <p>Немножки про этот проект</p>
-
-                  </div>
-                        <a href="/" style="text-decoration: none;"><span class="label label-warning" >Подробнее</span></a>
+                    <br><br>
+                    <div class="col-md-8 ml-auto mr-auto" style="text-align:  center;">
+                        <button type="submit">Добавить</button>
+                      </form>
+                     </div>
+                    <br><br>
                 </div>
 
-  			</div>
-
-              <div class="tab-pane text-center gallery" id="waiting">
-      				<div class="media border p-3">
-                  <div class="media-body">
-                    <h4>Ожидание</h4>
-                    <p>Немножки про этот проект</p>
-
-                  </div>
-                        <a href="/" style="text-decoration: none;"><span class="label label-warning" >Подробнее</span></a>
-                </div>
-
-  			</div>
 
 
 
@@ -812,7 +772,7 @@ var BrowserDetect = {
 	</div>
 
 	<footer class="footer text-center ">
-        <p>Designed by <a href="https://demos.creative-tim.com/material-kit/index.html" target="_blank">Milena Laistseva</a> for SPbU project</p>
+        <p>Made with <a href="https://demos.creative-tim.com/material-kit/index.html" target="_blank">Material Kit</a> by Creative Tim</p>
     </footer>
 
     <script src="https://unpkg.com/popper.js@1.12.6/dist/umd/popper.js" integrity="sha384-fA23ZRQ3G/J53mElWqVJEGJzU0sTs+SvzG8fXVWP+kJQ1lwFAOkcUOysnlKJC33U" crossorigin="anonymous"></script>

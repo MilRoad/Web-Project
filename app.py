@@ -147,8 +147,8 @@ def interests():
             cur.execute('select * from programmer_areas where areas_id=%s and programmer_email=%s', (i,email,))
             if cur.fetchall() == []:
                 cur.execute(
-                    'insert into programmer_areas (programmer_email, areas_id, level) values (%s, %s, %s)',
-                    (email, i, 0))
+                    'insert into programmer_areas (programmer_email, areas_id) values (%s, %s)',
+                    (email, i))
 
     for i in languages:
         cur.execute('select * from languages where id=%s', (i,))
@@ -157,8 +157,8 @@ def interests():
             cur.execute('select * from programmer_languages where languages_id=%s and programmer_email=%s', (i, email,))
             if cur.fetchall() == []:
                 cur.execute(
-                    'insert into programmer_languages (programmer_email, languages_id, level) values (%s, %s, %s)',
-                    (email, i, 0))
+                    'insert into programmer_languages (programmer_email, languages_id) values (%s, %s)',
+                    (email, i))
 
     cur.execute(
         'update programmer set description=%s where email=%s',
@@ -203,6 +203,9 @@ def profile():
         name = person[0] + " " + person[1]
         description = person[2]
 
+        session['languages'] = all_lang
+        session['areas'] = all_areas
+
         return render_template('profile.html', languages=all_lang, areas=all_areas, name=name, description=description)
     else:
         sql4 = """
@@ -213,8 +216,165 @@ def profile():
         name = person[0] + " " + person[1]
         return render_template('profile.html', name=name)
 
+@app.route('/create_orders')
+def create_orders():
+    return redirect('/orders')
 
+@app.route('/orders', methods=['POST'])
+def orders():
+    cur.execute('select * from languages')
+    languages = cur.fetchall()
+    cur.execute('select * from areas')
+    areas = cur.fetchall()
+    conn.commit()
+    all_lang = []
+    all_areas = []
 
+    for lang in languages:
+        lang_info = {
+            'id': lang[1],
+            'name': lang[0],
+        }
+        all_lang.append(lang_info)
+
+    for area in areas:
+        area_info = {
+            'name': area[1],
+            'id': area[0],
+        }
+        all_areas.append(area_info)
+
+    return render_template('orders_inf.html', languages=all_lang, areas=all_areas)
+
+@app.route('/add_orders', methods=['POST'])
+def add_orders():
+    email = session['email']
+    languages = request.form.getlist('lang')
+    areas = request.form.getlist('area')
+    description = request.form['description']
+
+    cur.execute('insert into orders (description, customer_email) values (%s, %s)', (description, email))
+    order_id = cur.lastrowid
+    conn.commit()
+
+    for i in areas:
+        cur.execute('select * from areas where id=%s', (i,))
+        area = cur.fetchone()
+        if area != []:
+            cur.execute('select * from orders_areas where areas_id=%s and orders_id=%s', (i, order_id,))
+            if cur.fetchall() == []:
+                cur.execute(
+                    'insert into orders_areas (orders_id, areas_id) values (%s, %s)',
+                    (order_id, i))
+                conn.commit()
+
+    for i in languages:
+        cur.execute('select * from languages where id=%s', (i,))
+        lang = cur.fetchone()
+        if lang != []:
+            cur.execute('select * from orders_languages where languages_id=%s and orders_id=%s', (i, order_id,))
+            if cur.fetchall() == []:
+                cur.execute(
+                    'insert into orders_languages (orders_id, languages_id) values (%s, %s)',
+                    (order_id, i))
+
+    return redirect('/profile')
+
+@app.route('/find_order', methods=['POST'])
+def find_order():
+    email = session['email']
+    if email == 'programmer':
+        all_lang = session['languages']
+        all_areas = session['areas']
+
+        orders_id = []
+        for i in all_lang:
+            sql = """
+            SELECT orders_id FROM orders_languages
+            WHERE languages_id IN
+            (SELECT id 
+             FROM languages
+             WHERE name=%s)"""
+            cur.execute(sql, (i,))
+            ord = cur.fetchall()
+            conn.commit()
+            for j in ord:
+                orders_id.append(j)
+
+        for i in all_areas:
+            sql = """
+            SELECT orders_id FROM orders_areas
+            WHERE areas_id IN
+            (SELECT id 
+             FROM areas
+             WHERE name=%s)"""
+            cur.execute(sql, (i,))
+            ord = cur.fetchall()
+            conn.commit()
+            for j in ord:
+                orders_id.append(j)
+        all_orders = []
+        for i in orders_id:
+            cur.execute('select * from orders where id = %s', (i,))
+            order = cur.fetchall()
+            order_info = {
+                'id': order[0],
+                'description': order[1],
+                'customer_name': order[2],
+            }
+            all_orders.append(order_info)
+            conn.commit()
+
+    return render_template("orders.html", orders=all_orders)
+
+@app.route('/order_info/<int:order_id>', methods=['GET'])
+def order_info(order_id):
+    cur.execute('select * from orders where id = %s', (order_id,))
+    order = cur.fetchall()
+    conn.commit()
+    description = order[1]
+    customer_name = order[2]
+
+    sql1 = """
+            SELECT name FROM areas
+            WHERE id IN
+                (SELECT areas_id 
+                 FROM orders_areas
+                 WHERE orders_id=%s)"""
+    sql2 = """
+                    SELECT name FROM languages
+                    WHERE id IN
+                        (SELECT languages_id 
+                        FROM orders_languages
+                        WHERE orders_id=%s)"""
+
+    cur.execute(sql1, (order_id,))
+    languages = cur.fetchall()
+    cur.execute(sql2, (order_id,))
+    areas = cur.fetchall()
+    conn.commit()
+    order_info = {
+        'id': order_id,
+        'description': description,
+        'customer_name': customer_name,
+        'languages': languages,
+        'areas': areas
+    }
+    all_orders = []
+    all_orders.append(order_info)
+
+    return render_template('order_info.html', orders=all_orders)
+
+# status 1 - программист хочет взять заказ, но не одобрен еще заказчиком
+# status 0 - программист хотел взять заказ, но заказчик отказался
+# status 2 - программист получил заказ, он в процессе работы
+# status 3 - программист выполнил заказ
+@app.route('/take_order<int:order_id>', methods=['POST', 'GET'])
+def take_order(order_id):
+    email = session['email']
+    cur.execute('insert into programmers_orders (programmer_email, orders_id, status) values (%s,%s,%s)', (email, order_id, 1))
+    conn.commit()
+    return redirect('/find_order')
 
 if __name__ == '__main__':
     app.secret_key = 'super secret key'

@@ -380,10 +380,13 @@ def order_info(order_id):
 
     cur.execute('select first_name, last_name from customer where email = %s', (customer_email,))
     customer = cur.fetchone()
-    name = customer[0] + " " + customer[1]
+    customer_name = customer[0] + " " + customer[1]
 
     cur.execute('select id from emails where email = %s', (customer_email,))
-    id = cur.fetchone()[0]
+    customer_id = cur.fetchone()[0]
+
+    cur.execute('select id from emails where email = %s', (session['email'],))
+    user_id = cur.fetchone()[0]
 
     sql1 = """
             SELECT name FROM areas
@@ -405,14 +408,33 @@ def order_info(order_id):
     conn.commit()
 
 
+    cur.execute('select programmer_email, status from programmers_orders where orders_id=%s', (order_id,))
+    prog_order = cur.fetchall()
+    programmers = []
+    for i in prog_order:
+        cur.execute('select first_name, last_name from programmer where email=%s', (i[0],))
+        name = cur.fetchone()
+        cur.execute('select id from emails where email=%s', (i[0],))
+        id = cur.fetchone()[0]
+        conn.commit()
+        prog_info = {
+            'email': i[0],
+            'status': i[1],
+            'name': name[0] + ' ' + name[1],
+            'id': id
+        }
+        programmers.append(prog_info)
+
     order_info = {
         'id': order_id,
         'description': description,
         'customer_email': customer_email,
-        'customer_name': name,
+        'customer_name': customer_name,
         'languages': [i[0] for i in languages],
         'areas': [i[0] for i in areas],
-        'customer_id': id
+        'programmers': programmers,
+        'customer_id': customer_id,
+        'user_id': user_id
     }
 
     return render_template('orders.html', orders=order_info, status=session['type'])

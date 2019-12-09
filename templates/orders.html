@@ -715,6 +715,9 @@ var BrowserDetect = {
                             {% if status == 'programmer' %}
                                <a href="/take_order/{{ orders.id }}"> <span class="label label-warning" style="background-color: black;">Получить заказ</span></a>
                             {% endif %}
+{#                            {% if status == 'programmer' %}#}
+                               <a href="/finish_order/{{ orders.id }}"> <span class="label label-warning" style="background-color: black;">Завершить заказ</span></a>
+{#                            {% endif %}#}
 	                        </div>
 	                    </div>
     	            </div>
@@ -732,7 +735,7 @@ var BrowserDetect = {
 
                             <li class="nav-item">
                                 <a class="nav-link active" href="#work" role="tab" data-toggle="tab">
-                                  <i class="material-icons">build</i>
+                                  <i class="material-icons">adb</i>
                                   Создатель заказа
                                 </a>
                             </li>
@@ -741,6 +744,12 @@ var BrowserDetect = {
                                 <a class="nav-link" href="#programmer" role="tab" data-toggle="tab">
                                   <i class="material-icons">cached</i>
                                   В режиме ожидания
+                                </a>
+                            </li>
+                              <li class="nav-item">
+                                <a class="nav-link" href="#start" role="tab" data-toggle="tab">
+                                  <i class="material-icons">build</i>
+                                  В разработке
                                 </a>
                             </li>
 
@@ -792,15 +801,12 @@ var BrowserDetect = {
                   </div>
             {% endif %}
 
-
-
-
-
-
-
             </div>
         </div>
-	</div>
+
+
+
+          </div>
 
 	<footer class="footer text-center ">
         <p>Designed by <a href="https://demos.creative-tim.com/material-kit/index.html" target="_blank">Milena Laistseva</a> for SPbU project</p>

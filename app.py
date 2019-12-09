@@ -86,7 +86,10 @@ def login():
             session['email'] = email
             session['type'] = 'customer'
         conn.commit()
-    return redirect('/profile')
+        cur.execute('select id from emails where email=%s', (session['email'],))
+        id = cur.fetchone()[0]
+    return redirect(f'/profile/{id}')
+
 
 @app.route('/logout')
 def logout():
@@ -167,7 +170,9 @@ def interests():
         (description,email))
 
     conn.commit()
-    return redirect('/profile')
+    cur.execute('select id from emails where email=%s',(session['email'],))
+    id = cur.fetchone()[0]
+    return redirect(f'/profile/{id}')
 
 @app.route('/profile')
 def profile():
@@ -478,7 +483,7 @@ def profile_view(id):
                             FROM programmer_languages
                             WHERE programmer_email=%s)"""
         sql3 = """
-                SELECT first_name, last_name, description FROM programmer WHERE email=%s"""
+                SELECT first_name, last_name, description,stars FROM programmer WHERE email=%s"""
         cur.execute(sql1, (email,))
         areas = cur.fetchall()
         cur.execute(sql2, (email,))
@@ -496,12 +501,22 @@ def profile_view(id):
             all_lang.append(i[0])
         name = person[0] + " " + person[1]
         description = person[2]
+        stars = person[3]
+        star = []
+        for i in range(5):
+            if stars >= 1:
+                star.append(2)
+            elif stars >=0.5:
+                star.append(1)
+            else:
+                star.append(0)
+            stars -= 1
 
         session['languages'] = all_lang
         session['areas'] = all_areas
 
         return render_template('profile.html', languages=all_lang, areas=all_areas, name=name, description=description,
-                               status=status, admin=admin)
+                               status=status, admin=admin, stars=star)
     else:
         sql4 = """
                         SELECT first_name, last_name FROM customer WHERE email=%s"""

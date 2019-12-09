@@ -691,7 +691,7 @@ var BrowserDetect = {
         </div>
     </nav>
 
-    <div class="page-header header-filter" data-parallax="true" style="background-image:url('https://diamondray.ru/wp-content/uploads/2019/03/02DROM_work_013.jpg');"></div>
+    <div class="page-header header-filter" data-parallax="true" style="background-image:url('https://assets.aspeninstitute.org/content/uploads/2016/06/Team-Unity-Friends-Meeting-Partnership-Concept-000090609447_Large.jpg');"></div>
     <div class="main main-raised">
 		<div class="profile-content">
             <div class="container">
@@ -699,39 +699,33 @@ var BrowserDetect = {
 	                <div class="col-md-6 ml-auto mr-auto">
         	           <div class="profile">
 	                        <div class="avatar">
-	                            <img src="https://pbs.twimg.com/profile_images/857551974442651648/D5cZLXTf.jpg" alt="Circle Image" class="img-raised rounded-circle img-fluid">
+	                            <img src="https://banner2.cleanpng.com/20180405/rjq/kisspng-computer-icons-task-id-5ac5d607a40ca0.037661261522914823672.jpg" alt="Circle Image" class="img-raised rounded-circle img-fluid">
 	                        </div>
 	                        <div class="name">
-                            {{ orders }}
+                            <h3 class="title">Заказ #{{ orders.id }}</h3>
 
-                            {% if status == 'programmer' %}
-                                {% for lang in languages %}
+                                {% for lang in orders.languages %}
                                          <span class="label label-warning">{{ lang }}</span>
                                 {% endfor %}
                                 <br>
                                 <br>
-                                {% for area in areas %}
+                                {% for area in orders.areas %}
                                          <span class="label label-info" style="background-color: mediumpurple;">{{ area }}</span>
                                 {% endfor %}
-                            {% endif %}
                                 <hr>
                             {% if status == 'programmer' %}
-                               <a href="/create_orders"> <span class="label label-warning">Получить заказ</span></a>
-                            {% endif %}
-                            {% if status == 'customer' %}
-								<a href="#pablo" class="btn btn-just-icon btn-link btn-dribbble"><i class="fa fa-dribbble"></i></a>
-                                <a href="#pablo" class="btn btn-just-icon btn-link btn-twitter"><i class="fa fa-twitter"></i></a>
-                                <a href="#pablo" class="btn btn-just-icon btn-link btn-pinterest"><i class="fa fa-pinterest"></i></a>
+                               <a href="/take_order/{{ orders.id }}"> <span class="label label-warning" style="background-color: black;">Получить заказ</span></a>
                             {% endif %}
 	                        </div>
 	                    </div>
     	            </div>
                 </div>
-            {% if status == 'programmer' %}
                 <div class="description text-center">
-                    <p style="color: gray;font-size: 100%;font-style: italic;">{{ description }}</p>
+                    <h3 class="title">Описание заказа:</h3>
+                    <p style="color: gray;font-size: 100%;font-style: italic;">{{ orders.description }}</p>
                 </div>
-            {% endif %}
+
+
 				<div class="row">
 					<div class="col-md-6 ml-auto mr-auto">
                         <div class="profile-tabs">
@@ -765,11 +759,11 @@ var BrowserDetect = {
             <div class="tab-pane active text-center gallery" id="work">
   				<div class="media border p-3">
                   <div class="media-body">
-                    <h4>Название нынешних проектов </h4>
-                    <p>Немножки про этот проект</p>
+                    <h4>Имя заказчика: {{ orders.customer_name }} </h4>
+                      <h4>Почта: {{ orders.customer_email }}</h4>
 
                   </div>
-                     <a href="/" style="text-decoration: none;"><span class="label label-warning">Подробнее</span></a>
+                     <a href="/profile/{{ orders.customer_id }}" style="text-decoration: none;"><span class="label label-warning">Подробнее</span></a>
                 </div>
   			</div>
 

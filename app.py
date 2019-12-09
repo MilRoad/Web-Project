@@ -53,14 +53,16 @@ def register():
             cur.execute(
                 f'insert into {name_table} (email, password, first_name, last_name, phone, stars) values (%s, %s,%s,%s,%s, %s)',
                 (email, password, first_name, last_name, phone, 0))
+            cur.execute('insert into emails (email, status) values (%s, %s)', (email, name_table))
             conn.commit()
             session['email'] = email
             session['type'] = name_table
         except psycopg2.errors.UniqueViolation:
             conn.commit()
             return render_template('error_registr.html')
-
-    return redirect('/test')
+    if name_table == 'programmer':
+        return redirect('/description')
+    return redirect('/profile')
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -94,15 +96,15 @@ def logout():
 
 
 
-@app.route('/test')
-def test():
-    print(session['type'])
-    if session['type'] == 'programmer':
-        cur.execute('select description from programmer where email=%s',(session['email'],))
-        if cur.fetchone()[0] is None:
-            return redirect('/description')
-        conn.commit()
-    return render_template('profile.html')
+# @app.route('/test')
+# def test():
+#     print(session['type'])
+#     if session['type'] == 'programmer':
+#         cur.execute('select description from programmer where email=%s',(session['email'],))
+#         if cur.fetchone()[0] is None:
+#             return redirect('/description')
+#         conn.commit()
+#     return render_template('profile.html')
 
 
 @app.route('/description')
@@ -170,6 +172,7 @@ def interests():
 @app.route('/profile')
 def profile():
     email = session['email']
+    admin = True
     if session['type'] == 'programmer':
         sql1 = """
         SELECT name FROM areas
@@ -206,7 +209,7 @@ def profile():
         session['languages'] = all_lang
         session['areas'] = all_areas
 
-        return render_template('profile.html', languages=all_lang, areas=all_areas, name=name, description=description, status=session['type'])
+        return render_template('profile.html', languages=all_lang, areas=all_areas, name=name, description=description, status=session['type'], admin=admin)
     else:
         sql4 = """
                 SELECT first_name, last_name FROM customer WHERE email=%s"""
@@ -214,7 +217,47 @@ def profile():
         person = cur.fetchone()
         conn.commit()
         name = person[0] + " " + person[1]
-        return render_template('profile.html', name=name, status=session['type'])
+
+        cur.execute('select * from orders where customer_email=%s',(email,))
+        orders = cur.fetchall()
+        ord_wait = []
+        ord_progress = []
+        ord_done = []
+        print(orders)
+        for i in orders:
+            print(i)
+            cur.execute('select status from programmers_orders where orders_id=%s', (i[0],))
+            status = cur.fetchall()
+
+            if status == []:
+                ord_info = {
+                    'id': i[0],
+                    'description': i[1],
+                }
+                ord_wait.append(ord_info)
+            else:
+                k = 0
+                for j in status:
+                    if j[0] == 1 and k == 0:
+                        ord_info = {
+                            'id': i[0],
+                            'description': i[1],
+                        }
+                        ord_wait.append(ord_info)
+                        k += 1
+                    if j[0] == 2:
+                        ord_info = {
+                            'id': i[0],
+                            'description': i[1],
+                        }
+                        ord_progress.append(ord_info)
+                    if j[0] == 3:
+                        ord_info = {
+                            'id': i[0],
+                            'description': i[1],
+                        }
+                        ord_done.append(ord_info)
+        return render_template('profile.html', name=name, status=session['type'], orders_wait=ord_wait, orders_progress=ord_progress, orders_done=ord_done, admin=admin)
 
 
 @app.route('/create_orders', methods=['GET'])
@@ -295,7 +338,8 @@ def find_order():
             ord = cur.fetchall()
             conn.commit()
             for j in ord:
-                orders_id.append(j)
+                if j not in orders_id:
+                    orders_id.append(j)
 
         for i in all_areas:
             sql = """
@@ -308,7 +352,8 @@ def find_order():
             ord = cur.fetchall()
             conn.commit()
             for j in ord:
-                orders_id.append(j)
+                if j not in orders_id:
+                    orders_id.append(j)
         all_orders = []
         for i in orders_id:
             cur.execute('select * from orders where id = %s ', (i,))
@@ -331,7 +376,14 @@ def order_info(order_id):
     order = cur.fetchone()
     conn.commit()
     description = order[1]
-    customer_name = order[2]
+    customer_email = order[2]
+
+    cur.execute('select first_name, last_name from customer where email = %s', (customer_email,))
+    customer = cur.fetchone()
+    name = customer[0] + " " + customer[1]
+
+    cur.execute('select id from emails where email = %s', (customer_email,))
+    id = cur.fetchone()[0]
 
     sql1 = """
             SELECT name FROM areas
@@ -346,17 +398,21 @@ def order_info(order_id):
                         FROM orders_languages
                         WHERE orders_id=%s)"""
 
-    cur.execute(sql1, (order_id,))
-    languages = cur.fetchall()
     cur.execute(sql2, (order_id,))
+    languages = cur.fetchall()
+    cur.execute(sql1, (order_id,))
     areas = cur.fetchall()
     conn.commit()
+
+
     order_info = {
         'id': order_id,
         'description': description,
-        'customer_name': customer_name,
+        'customer_email': customer_email,
+        'customer_name': name,
         'languages': [i[0] for i in languages],
-        'areas': [i[0] for i in areas]
+        'areas': [i[0] for i in areas],
+        'customer_id': id
     }
 
     return render_template('orders.html', orders=order_info, status=session['type'])
@@ -365,12 +421,115 @@ def order_info(order_id):
 # status 0 - программист хотел взять заказ, но заказчик отказался
 # status 2 - программист получил заказ, он в процессе работы
 # status 3 - программист выполнил заказ
-@app.route('/take_order<int:order_id>', methods=['POST', 'GET'])
+@app.route('/take_order/<int:order_id>', methods=['POST', 'GET'])
 def take_order(order_id):
     email = session['email']
-    cur.execute('insert into programmers_orders (programmer_email, orders_id, status) values (%s,%s,%s)', (email, order_id, 1))
-    conn.commit()
-    return redirect('/find_order')
+    cur.execute('select * from programmers_orders where programmer_email=%s and orders_id=%s', (email,order_id,))
+    if cur.fetchone() == []:
+        cur.execute('insert into programmers_orders (programmer_email, orders_id, status) values (%s,%s,%s)', (email, order_id, 1))
+        conn.commit()
+    return render_template('success.html')
+
+@app.route('/profile/<int:id>', methods=['GET'])
+def profile_view(id):
+    cur.execute('select email, status from emails where id=%s',(id,))
+    person = cur.fetchone()
+    email = person[0]
+    status = person[1]
+
+    if session['email'] == email:
+        admin = True
+    else:
+        admin = False
+
+    if status == 'programmer':
+        sql1 = """
+                SELECT name FROM areas
+                WHERE id IN
+                    (SELECT areas_id 
+                     FROM programmer_areas
+                     WHERE programmer_email=%s)"""
+        sql2 = """
+                        SELECT name FROM languages
+                        WHERE id IN
+                            (SELECT languages_id 
+                            FROM programmer_languages
+                            WHERE programmer_email=%s)"""
+        sql3 = """
+                SELECT first_name, last_name, description FROM programmer WHERE email=%s"""
+        cur.execute(sql1, (email,))
+        areas = cur.fetchall()
+        cur.execute(sql2, (email,))
+        langs = cur.fetchall()
+        cur.execute(sql3, (email,))
+        person = cur.fetchone()
+        conn.commit()
+
+        all_lang = []
+        all_areas = []
+
+        for i in areas:
+            all_areas.append(i[0])
+        for i in langs:
+            all_lang.append(i[0])
+        name = person[0] + " " + person[1]
+        description = person[2]
+
+        session['languages'] = all_lang
+        session['areas'] = all_areas
+
+        return render_template('profile.html', languages=all_lang, areas=all_areas, name=name, description=description,
+                               status=status, admin=admin)
+    else:
+        sql4 = """
+                        SELECT first_name, last_name FROM customer WHERE email=%s"""
+        cur.execute(sql4, (email,))
+        person = cur.fetchone()
+        conn.commit()
+        name = person[0] + " " + person[1]
+
+        cur.execute('select * from orders where customer_email=%s', (email,))
+        orders = cur.fetchall()
+        ord_wait = []
+        ord_progress = []
+        ord_done = []
+        print(orders)
+        for i in orders:
+            print(i)
+            cur.execute('select status from programmers_orders where orders_id=%s', (i[0],))
+            status = cur.fetchall()
+
+            if status == []:
+                ord_info = {
+                    'id': i[0],
+                    'description': i[1],
+                }
+                ord_wait.append(ord_info)
+            else:
+                k = 0
+                for j in status:
+                    if j[0] == 1 and k == 0:
+                        ord_info = {
+                            'id': i[0],
+                            'description': i[1],
+                        }
+                        ord_wait.append(ord_info)
+                        k += 1
+                    if j[0] == 2:
+                        ord_info = {
+                            'id': i[0],
+                            'description': i[1],
+                        }
+                        ord_progress.append(ord_info)
+                    if j[0] == 3:
+                        ord_info = {
+                            'id': i[0],
+                            'description': i[1],
+                        }
+                        ord_done.append(ord_info)
+        return render_template('profile.html', name=name, status=session['type'], orders_wait=ord_wait,
+                               orders_progress=ord_progress, orders_done=ord_done, admin=admin)
+
 
 if __name__ == '__main__':
     app.secret_key = 'super secret key'

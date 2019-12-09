@@ -703,7 +703,6 @@ var BrowserDetect = {
 	                        </div>
 	                        <div class="name">
 	                            <h3 class="title">{{ name }}</h3>
-
                             {% if status == 'programmer' %}
                                 {% for lang in languages %}
                                          <span class="label label-warning">{{ lang }}</span>
@@ -715,10 +714,15 @@ var BrowserDetect = {
                                 {% endfor %}
                             {% endif %}
                                 <hr>
-                            {% if status == 'customer' %}
-                               <a href="/create_orders"> <span class="label label-warning"> Добавить заказ</span></a>
+                            {% if status == 'customer' and admin%}
+                               <a href="/create_orders" style="text-decoration: none;"> <span class="label label-warning"> Добавить заказ</span></a>
+                            {% endif %}
+                            {% if status == 'programmer' and admin%}
+                               <a href="/find_order" style="text-decoration: none;"> <span class="label label-warning" style="background-color: black"> Найти заказ</span></a>
                             {% endif %}
                             {% if status == 'programmer' %}
+                                <br>
+                                <br>
 								<a href="#pablo" class="btn btn-just-icon btn-link btn-dribbble"><i class="fa fa-dribbble"></i></a>
                                 <a href="#pablo" class="btn btn-just-icon btn-link btn-twitter"><i class="fa fa-twitter"></i></a>
                                 <a href="#pablo" class="btn btn-just-icon btn-link btn-pinterest"><i class="fa fa-pinterest"></i></a>
@@ -765,49 +769,75 @@ var BrowserDetect = {
                         </div>
     	    	</div>
             </div>
-
+        {% if status == 'customer' %}
           <div class="tab-content tab-space">
             <div class="tab-pane active text-center gallery" id="work">
+            {% if orders_progress != [] %}
+                {% for order in orders_progress %}
   				<div class="media border p-3">
                   <div class="media-body">
-                    <h4>Название нынешних проектов </h4>
-                    <p>Немножки про этот проект</p>
+                        <h4>{{ order.id }} </h4>
+                        <p>{{ order.description }}</p>
 
                   </div>
-                     <a href="/" style="text-decoration: none;"><span class="label label-warning">Подробнее</span></a>
+                     <a href="/order_info/{{ order.id }}" style="text-decoration: none;"><span class="label label-warning">Подробнее</span></a>
                 </div>
+                    <br>
+                {% endfor %}
+            {% else %}
+                  <div class="media-body">
+                        <h4>У ваc пока нет заказов в разработке </h4>
+
+                  </div>
+            {% endif %}
   			</div>
 
-
-
             <div class="tab-pane text-center gallery" id="finish">
+            {% if orders_done != [] %}
+                {% for order in orders_done %}
       				<div class="media border p-3">
                   <div class="media-body">
-                    <h4>Название завершенных проектов</h4>
-                    <p>Немножки про этот проект</p>
+                    <h4>{{ order.id }} </h4>
+                      <p>{{ order.description }}</p>
 
                   </div>
-                        <a href="/" style="text-decoration: none;"><span class="label label-warning" >Подробнее</span></a>
+                        <a href="/order_info/{{ order.id }}" style="text-decoration: none;"><span class="label label-warning" >Подробнее</span></a>
                 </div>
+                    <br>
+                {% endfor %}
+            {% else %}
+                     <div class="media-body">
+                        <h4>У ваc пока нет завершенных заказов </h4>
+                  </div>
+            {% endif %}
 
   			</div>
 
               <div class="tab-pane text-center gallery" id="waiting">
+            {% if orders_wait != [] %}
+              {% for order in orders_wait %}
       				<div class="media border p-3">
                   <div class="media-body">
-                    <h4>Ожидание</h4>
-                    <p>Немножки про этот проект</p>
+                     <h4>Заказ #{{ order.id }} </h4>
+                      <p>{{ order.description }}</p>
 
                   </div>
-                        <a href="/" style="text-decoration: none;"><span class="label label-warning" >Подробнее</span></a>
+                        <a href="/order_info/{{ order.id }}" style="text-decoration: none;"><span class="label label-warning" >Подробнее</span></a>
                 </div>
+                  <br>
+                {% endfor %}
+            {% else %}
+                     <div class="media-body">
+                        <h4>У ваc пока нет новых заказов </h4>
+                  </div>
+
+            {% endif %}
 
   			</div>
 
-
-
-
             </div>
+
+        {% endif %}
         </div>
 	</div>
 

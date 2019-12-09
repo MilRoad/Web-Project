@@ -700,15 +700,23 @@ var BrowserDetect = {
         	           <div class="profile">
                            <h1>Актуальные заказы</h1>
                            <br>
-                {{ orders }}
+                {% if orders != [] %}
+                {% for order in orders %}
                 <div class="media border p-3">
                   <div class="media-body">
-                    <h4>Название завершенных проектов</h4>
-                    <p>Немножки про этот проект</p>
+                    <h4>Заказ #{{ order.id }}</h4>
+                    <p>{{ order.description }}</p>
 
                   </div>
-                        <a href="/" style="text-decoration: none;"><span class="label label-warning" >Подробнее</span></a>
+                        <a href="/order_info/{{ order.id }}" style="text-decoration: none;"><span class="label label-warning" >Подробнее</span></a>
                 </div>
+                 {% endfor %}
+                 {% else %}
+                       <div class="media-body">
+                    <h4>Подходящих заказов пока не найдено</h4>
+
+                  </div>
+                 {% endif %}
                            <br>
 
 

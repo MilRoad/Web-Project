@@ -703,6 +703,21 @@ var BrowserDetect = {
 	                        </div>
 	                        <div class="name">
 	                            <h3 class="title">{{ name }}</h3>
+
+                            <div>
+                                {% for i in stars %}
+                                {% if i == 2 %}
+                            <i class="fa fa-star" aria-hidden="true"> </i>
+                                {% endif %}
+                                {% if i == 1 %}
+                            <i class="fa fa-star-half-empty" aria-hidden="true"> </i>
+                                {% endif %}
+                                {% if i == 0 %}
+                            <i class="fa fa-star-o" aria-hidden="true"> </i>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                            <br>
                             {% if status == 'programmer' %}
                                 {% for lang in languages %}
                                          <span class="label label-warning">{{ lang }}</span>

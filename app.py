@@ -530,12 +530,12 @@ def profile_view(id):
         ord_wait = []
         ord_progress = []
         ord_done = []
-        print(orders)
+
         for i in orders:
             print(i)
             cur.execute('select status from programmers_orders where orders_id=%s', (i[0],))
             status = cur.fetchall()
-
+            print(status)
             if status == []:
                 ord_info = {
                     'id': i[0],
@@ -543,7 +543,7 @@ def profile_view(id):
                 }
                 ord_wait.append(ord_info)
             else:
-                k = 0
+                k, l, m = 0
                 for j in status:
                     if j[0] == 1 and k == 0:
                         ord_info = {
@@ -552,20 +552,38 @@ def profile_view(id):
                         }
                         ord_wait.append(ord_info)
                         k += 1
-                    if j[0] == 2:
+                    if j[0] == 2 and l == 0:
                         ord_info = {
                             'id': i[0],
                             'description': i[1],
                         }
                         ord_progress.append(ord_info)
-                    if j[0] == 3:
+                        l +=1
+                    if j[0] == 3 and m == 0:
                         ord_info = {
                             'id': i[0],
                             'description': i[1],
                         }
                         ord_done.append(ord_info)
+                        m += 0
         return render_template('profile.html', name=name, status=session['type'], orders_wait=ord_wait,
                                orders_progress=ord_progress, orders_done=ord_done, admin=admin)
+
+
+@app.route('/start_order/<int:order_id>', methods=['GET'])
+def start_order(order_id):
+    cur.execute('update programmers_orders set status=%s where orders_id=%s and status=%s',(2, order_id, 1))
+    conn.commit()
+    return render_template('success.html')
+
+@app.route('/finish_order/<int:order_id>', methods=['GET'])
+def finish_order(order_id):
+    cur.execute('update programmers_orders set status=%s where orders_id=%s and status=%s',(3, order_id, 2))
+    cur.execute('update programmers_orders set status=%s where orders_id=%s and status=%s', (0, order_id, 1))
+    conn.commit()
+    cur.execute('select programmer_email from programmers_orders where status=%s and orders_id=%s', (3, order_id,))
+    programmers = cur.fetchall()
+    return redirect(f'/order_info/{order_id}')
 
 
 if __name__ == '__main__':

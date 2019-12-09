@@ -691,34 +691,100 @@ var BrowserDetect = {
         </div>
     </nav>
 
-    <div class="page-header header-filter" data-parallax="true" style="background-image:url('https://c.pxhere.com/images/8c/2a/0d81338e8721957d193e4d662da2-1448921.jpg!d');"></div>
+    <div class="page-header header-filter" data-parallax="true" style="background-image:url('https://diamondray.ru/wp-content/uploads/2019/03/02DROM_work_013.jpg');"></div>
     <div class="main main-raised">
 		<div class="profile-content">
             <div class="container">
                 <div class="row">
-	                <div class="col-md-12 ml-auto mr-auto">
+	                <div class="col-md-6 ml-auto mr-auto">
         	           <div class="profile">
-                           <h1>Актуальные заказы</h1>
-                           <br>
-                {{ orders }}
-                <div class="media border p-3">
+	                        <div class="avatar">
+	                            <img src="https://pbs.twimg.com/profile_images/857551974442651648/D5cZLXTf.jpg" alt="Circle Image" class="img-raised rounded-circle img-fluid">
+	                        </div>
+	                        <div class="name">
+                            {{ orders }}
+
+                            {% if status == 'programmer' %}
+                                {% for lang in languages %}
+                                         <span class="label label-warning">{{ lang }}</span>
+                                {% endfor %}
+                                <br>
+                                <br>
+                                {% for area in areas %}
+                                         <span class="label label-info" style="background-color: mediumpurple;">{{ area }}</span>
+                                {% endfor %}
+                            {% endif %}
+                                <hr>
+                            {% if status == 'programmer' %}
+                               <a href="/create_orders"> <span class="label label-warning">Получить заказ</span></a>
+                            {% endif %}
+                            {% if status == 'customer' %}
+								<a href="#pablo" class="btn btn-just-icon btn-link btn-dribbble"><i class="fa fa-dribbble"></i></a>
+                                <a href="#pablo" class="btn btn-just-icon btn-link btn-twitter"><i class="fa fa-twitter"></i></a>
+                                <a href="#pablo" class="btn btn-just-icon btn-link btn-pinterest"><i class="fa fa-pinterest"></i></a>
+                            {% endif %}
+	                        </div>
+	                    </div>
+    	            </div>
+                </div>
+            {% if status == 'programmer' %}
+                <div class="description text-center">
+                    <p style="color: gray;font-size: 100%;font-style: italic;">{{ description }}</p>
+                </div>
+            {% endif %}
+				<div class="row">
+					<div class="col-md-6 ml-auto mr-auto">
+                        <div class="profile-tabs">
+                          <ul class="nav nav-pills nav-pills-icons justify-content-center" role="tablist">
+
+                            <li class="nav-item">
+                                <a class="nav-link active" href="#work" role="tab" data-toggle="tab">
+                                  <i class="material-icons">build</i>
+                                  Создатель заказа
+                                </a>
+                            </li>
+
+                              <li class="nav-item">
+                                <a class="nav-link" href="#programmer" role="tab" data-toggle="tab">
+                                  <i class="material-icons">cached</i>
+                                  В режиме ожидания
+                                </a>
+                            </li>
+
+
+
+
+
+
+                          </ul>
+                        </div>
+    	    	</div>
+            </div>
+
+          <div class="tab-content tab-space">
+            <div class="tab-pane active text-center gallery" id="work">
+  				<div class="media border p-3">
                   <div class="media-body">
-                    <h4>Название завершенных проектов</h4>
+                    <h4>Название нынешних проектов </h4>
+                    <p>Немножки про этот проект</p>
+
+                  </div>
+                     <a href="/" style="text-decoration: none;"><span class="label label-warning">Подробнее</span></a>
+                </div>
+  			</div>
+
+            <div class="tab-pane text-center gallery" id="programmer">
+      				<div class="media border p-3">
+                  <div class="media-body">
+                    <h4>Ожидание</h4>
                     <p>Немножки про этот проект</p>
 
                   </div>
                         <a href="/" style="text-decoration: none;"><span class="label label-warning" >Подробнее</span></a>
                 </div>
-                           <br>
 
 
-                           <br>
-	                    </div>
-    	            </div>
-                </div>
 
-
-            </div>
 
 
 

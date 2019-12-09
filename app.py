@@ -278,8 +278,8 @@ def add_orders():
 
 @app.route('/find_order', methods=['GET'])
 def find_order():
-    email = session['email']
-    if email == 'programmer':
+    type = session['type']
+    if type == 'programmer':
         all_lang = session['languages']
         all_areas = session['areas']
 
@@ -311,8 +311,8 @@ def find_order():
                 orders_id.append(j)
         all_orders = []
         for i in orders_id:
-            cur.execute('select * from orders where id = %s', (i,))
-            order = cur.fetchall()
+            cur.execute('select * from orders where id = %s ', (i,))
+            order = cur.fetchone()
             order_info = {
                 'id': order[0],
                 'description': order[1],
@@ -321,12 +321,14 @@ def find_order():
             all_orders.append(order_info)
             conn.commit()
 
-    return render_template("tasks.html", orders=all_orders)
+        return render_template("tasks.html", orders=all_orders)
+    else:
+        return render_template("tasks.html")
 
 @app.route('/order_info/<int:order_id>', methods=['GET'])
 def order_info(order_id):
     cur.execute('select * from orders where id = %s', (order_id,))
-    order = cur.fetchall()
+    order = cur.fetchone()
     conn.commit()
     description = order[1]
     customer_name = order[2]
@@ -353,13 +355,11 @@ def order_info(order_id):
         'id': order_id,
         'description': description,
         'customer_name': customer_name,
-        'languages': languages,
-        'areas': areas
+        'languages': [i[0] for i in languages],
+        'areas': [i[0] for i in areas]
     }
-    all_orders = []
-    all_orders.append(order_info)
 
-    return render_template('order_info.html', orders=all_orders)
+    return render_template('orders.html', orders=order_info, status=session['type'])
 
 # status 1 - программист хочет взять заказ, но не одобрен еще заказчиком
 # status 0 - программист хотел взять заказ, но заказчик отказался

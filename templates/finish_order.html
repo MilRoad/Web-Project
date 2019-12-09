@@ -699,33 +699,38 @@ var BrowserDetect = {
 	                <div class="col-md-12 ml-auto mr-auto">
         	           <div class="profile">
                            <h1>Чтобы завершить заказ, вы должны проставить оценки разработчикам</h1>
+
                            <hr>
-<form method="POST" action="/stars_programmer/{{ id }}">
+<form method="POST" action="/stars_programmer/{{ order_id }}">
+    {% for i in programmers %}
                 <div class="media border p-3">
                   <div class="media-body">
-                    <h4>Разработчик</h4>
-                    <p>Тут я говорю про себя бла бла бла</p>
+                    <h4>{{ i.name }}</h4>
 
                   </div>
 <div>
-                        <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios1" value="1" name="{{ id }}">
-                    <label class="form-check-label" for="exampleRadios1">
+                        <input class="form-check-input" type="radio"  id="{{ i.name }}1" value="1" name="{{ i.email }}">
+                    <label class="form-check-label" for="{{ i.name }}1">
     1
   </label>
-                    <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios2" value="2" name="{{ id }}">
-                    <label class="form-check-label" for="exampleRadios2">
+    <p></p>
+                    <input class="form-check-input" type="radio" name="{{ i.name }}" id="{{ i.name }}2" value="2" name="{{ i.email }}">
+                    <label class="form-check-label" for="{{ i.name }}2">
     2
   </label>
-                    <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios3" value="3" name="{{ id }}">
-                    <label class="form-check-label" for="exampleRadios3">
+    <p></p>
+                    <input class="form-check-input" type="radio" id="{{ i.name }}3" value="3" name="{{ i.email }}">
+                    <label class="form-check-label" for="{{ i.name }}3">
     3
   </label>
-                    <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios4" value="4" name="{{ id }}">
-                    <label class="form-check-label" for="exampleRadios4">
+    <p></p>
+                    <input class="form-check-input" type="radio"  id="{{ i.name }}4" value="4" name="{{ i.email }}">
+                    <label class="form-check-label" for="{{ i.name }}4">
     4
   </label>
-                    <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios" value="5" name="{{ id }}">
-                    <label class="form-check-label" for="exampleRadios5">
+    <p></p>
+                    <input class="form-check-input" type="radio"  id="{{ i.name }}5" value="5" name="{{ i.email }}">
+                    <label class="form-check-label" for="{{ i.name }}5">
     5
   </label>
                 </div>
@@ -734,6 +739,7 @@ var BrowserDetect = {
 
 
 	                    </div>
+    {% endfor %}
     <br>
     <button type="submit">Оценить</button>
                            <br> <br>

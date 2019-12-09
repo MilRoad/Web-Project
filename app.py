@@ -2,6 +2,7 @@ import psycopg2
 from flask import Flask, render_template, request, jsonify, session, redirect
 import constant
 from werkzeug.security import generate_password_hash,  check_password_hash
+import json
 
 app = Flask(__name__)
 
@@ -39,20 +40,25 @@ def register():
         phone = request.form['phone']
         if len(request.form) == 6:
             name_table = 'programmer'
-
+            stars = ', stars'
+            count = (email, password, first_name, last_name, phone, 0)
+            position = ', %s'
             cur.execute('select email from customer where email=%s',(email,))
             if cur.fetchall() != []:
                 return 'Вы являетесь работодателем и не можете зарегистрироваться, как программист'
         else:
             name_table = 'customer'
+            stars = ''
+            count = (email, password, first_name, last_name, phone)
+            position = ''
             cur.execute('select email from programmer where email=%s', (email,))
             if cur.fetchall() != []:
                 return 'Вы являетесь программистом и не можете зарегистрироваться, как разработчик'
 
         try:
             cur.execute(
-                f'insert into {name_table} (email, password, first_name, last_name, phone, stars) values (%s, %s,%s,%s,%s, %s)',
-                (email, password, first_name, last_name, phone, 0))
+                f'insert into {name_table} (email, password, first_name, last_name, phone{stars}) values (%s, %s,%s,%s,%s{position})',
+                count)
             cur.execute('insert into emails (email, status) values (%s, %s)', (email, name_table))
             conn.commit()
             session['email'] = email
@@ -441,7 +447,8 @@ def order_info(order_id):
         'customer_id': customer_id,
         'user_id': user_id
     }
-
+    with open('db.json','w') as file:
+        json.dump(order_info, file)
     return render_template('orders.html', orders=order_info, status=session['type'])
 
 # status 1 - программист хочет взять заказ, но не одобрен еще заказчиком
@@ -452,7 +459,9 @@ def order_info(order_id):
 def take_order(order_id):
     email = session['email']
     cur.execute('select * from programmers_orders where programmer_email=%s and orders_id=%s', (email,order_id,))
-    if cur.fetchone() == []:
+    person = cur.fetchone()
+    print(person)
+    if person == None:
         cur.execute('insert into programmers_orders (programmer_email, orders_id, status) values (%s,%s,%s)', (email, order_id, 1))
         conn.commit()
     return render_template('success.html')
@@ -515,8 +524,38 @@ def profile_view(id):
         session['languages'] = all_lang
         session['areas'] = all_areas
 
+        cur.execute('select orders_id, status from programmers_orders where programmer_email=%s', (email,))
+        orders = cur.fetchall()
+        ord_wait = []
+        ord_progress = []
+        ord_done = []
+        for i in orders:
+            cur.execute('select description from orders where id=%s', (i[0],))
+            ord = cur.fetchone()
+            if i[1] == 1:
+                ord_info = {
+                    'id': i[0],
+                    'description': ord[0],
+                }
+                ord_wait.append(ord_info)
+            if i[1] == 2:
+                ord_info = {
+                    'id': i[0],
+                    'description': ord[0],
+                }
+                ord_progress.append(ord_info)
+            if i[1] == 3:
+                ord_info = {
+                    'id': i[0],
+                    'description': ord[0],
+                }
+                ord_done.append(ord_info)
+
+
+
         return render_template('profile.html', languages=all_lang, areas=all_areas, name=name, description=description,
-                               status=status, admin=admin, stars=star)
+                               status=status, admin=admin, stars=star, orders_wait=ord_wait,
+                               orders_progress=ord_progress, orders_done=ord_done)
     else:
         sql4 = """
                         SELECT first_name, last_name FROM customer WHERE email=%s"""
@@ -543,7 +582,7 @@ def profile_view(id):
                 }
                 ord_wait.append(ord_info)
             else:
-                k, l, m = 0
+                k, l, m = 0, 0, 0
                 for j in status:
                     if j[0] == 1 and k == 0:
                         ord_info = {
@@ -570,19 +609,56 @@ def profile_view(id):
                                orders_progress=ord_progress, orders_done=ord_done, admin=admin)
 
 
-@app.route('/start_order/<int:order_id>', methods=['GET'])
-def start_order(order_id):
-    cur.execute('update programmers_orders set status=%s where orders_id=%s and status=%s',(2, order_id, 1))
+@app.route('/start_order/<int:order_id>/<email>', methods=['GET'])
+def start_order(order_id, email):
+    print(email)
+
+    cur.execute('update programmers_orders set status=%s where programmer_email=%s and orders_id=%s  and status=%s',(2,email, order_id, 1))
     conn.commit()
-    return render_template('success.html')
+    return redirect(f'/order_info/{order_id}')
+
+@app.route('/stars_order/<int:order_id>', methods=['GET'])
+def stars_order(order_id):
+    cur.execute('select programmer_email from programmers_orders where status=%s and orders_id=%s', (3, order_id))
+    programmer = cur.fetchall()
+    all_programmer = []
+    for i in programmer:
+        cur.execute('select first_name, last_name from programmer where email=%s',(i[0],))
+        info = cur.fetchone()
+        people_info={
+            'name': info[0] + ' ' + info[1],
+            'email': i[0]
+        }
+        all_programmer.append(people_info)
+    return render_template('finish_order.html', programmers=all_programmer,order_id=order_id)
 
 @app.route('/finish_order/<int:order_id>', methods=['GET'])
 def finish_order(order_id):
     cur.execute('update programmers_orders set status=%s where orders_id=%s and status=%s',(3, order_id, 2))
     cur.execute('update programmers_orders set status=%s where orders_id=%s and status=%s', (0, order_id, 1))
     conn.commit()
-    cur.execute('select programmer_email from programmers_orders where status=%s and orders_id=%s', (3, order_id,))
-    programmers = cur.fetchall()
+
+    return redirect(f'/stars_order/{order_id}')
+
+
+@app.route('/stars_programmer/<int:order_id>', methods=['POST'])
+def stars_programmer(order_id):
+
+    email_user = []
+    for i in request.form:
+        email_user.append(i)
+    for i in email_user:
+
+        cur.execute('select count(id) from programmers_orders where programmer_email=%s and status=%s',(i,3))
+        count = cur.fetchone()[0]
+        cur.execute('select stars from programmer where email=%s',(i,))
+        stars = cur.fetchone()[0]
+        stars = (stars * (count-1) + int(request.form[i]))/count
+        cur.execute('update programmer set stars=%s where email=%s',(stars,i))
+        conn.commit()
+
+
+
     return redirect(f'/order_info/{order_id}')
 
 

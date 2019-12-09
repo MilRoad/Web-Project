@@ -799,7 +799,41 @@ var BrowserDetect = {
                     <h4>Пока ни один программист не откликнулся на заказ</h4>
 
                   </div>
+            </div>
             {% endif %}
+            </div>
+
+          <div class="tab-pane text-center gallery" id="start">
+                {% if programmers != [] %}
+                {% for prog in orders.programmers %}
+                    {% if prog.status == 1 %}
+      				<div class="media border p-3">
+                   <div class="media-body">
+                    <h4>Имя программиста: {{ prog.name }}</h4>
+                    <p>Почта: {{ prog.email }}</p>
+
+                  </div>
+                        <a href="/profile/{{ prog.id }}" style="text-decoration: none;"><span class="label label-warning" >Открыть профиль</span></a>
+                        {% if orders.user_id == orders.customer_id %}
+                        <a href="/" style="text-decoration: none;"><span class="label label-warning" style="background-color: coral;">Назначить</span></a>
+                        {% endif %}
+                </div>
+                        <br>
+            {% endif %}
+            {% endfor %}
+            {% else %}
+            <div class="media border p-3">
+                   <div class="media-body">
+                    <h4>Пока ни один программист не откликнулся на заказ</h4>
+
+                  </div>
+            </div>
+            {% endif %}
+            </div>
+
+
+
+
 
             </div>
         </div>

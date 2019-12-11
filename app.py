@@ -40,9 +40,9 @@ def register():
         phone = request.form['phone']
         if len(request.form) == 6:
             name_table = 'programmer'
-            stars = ', stars'
-            count = (email, password, first_name, last_name, phone, 0)
-            position = ', %s'
+            stars = ', stars, status'
+            count = (email, password, first_name, last_name, phone, 0,False)
+            position = ', %s, %s'
             cur.execute('select email from customer where email=%s',(email,))
             if cur.fetchall() != []:
                 return 'Вы являетесь работодателем и не можете зарегистрироваться, как программист'
@@ -59,7 +59,8 @@ def register():
             cur.execute(
                 f'insert into {name_table} (email, password, first_name, last_name, phone{stars}) values (%s, %s,%s,%s,%s{position})',
                 count)
-            cur.execute('insert into emails (email, status) values (%s, %s)', (email, name_table))
+            cur.execute('insert into emails (email, status) values (%s, %s) returning id', (email, name_table))
+            person_id = cur.fetchone()[0]
             conn.commit()
             session['email'] = email
             session['type'] = name_table
@@ -68,33 +69,45 @@ def register():
             return render_template('error_registr.html')
     if name_table == 'programmer':
         return redirect('/description')
-    return redirect('/profile')
+    return redirect(f'/profile/{person_id}')
 
 @app.route('/login', methods=['POST'])
 def login():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
-        cur.execute('select email,password from programmer where email = (%s)', (email,))
-        programmer = cur.fetchall()
-        cur.execute('select email,password from customer where email = (%s)', (email,))
-        customer = cur.fetchall()
-        if programmer == [] and customer == []:
-            return render_template('error_login.html')
-        elif customer == []:
-            if not (check_password_hash(programmer[0][1], password)):
+
+        cur.execute('select email, password from admin where email=%s', (email,))
+        admin = cur.fetchone()
+        if admin != []:
+            adm_pass = admin[1]
+            if adm_pass == password:
+                return render_template('admin.html')
+            else:
                 return render_template('error_login.html')
-            session['email'] = email
-            session['type'] = 'programmer'
+
         else:
-            if not (check_password_hash(customer[0][1], password)):
+
+            cur.execute('select email,password from programmer where email = (%s)', (email,))
+            programmer = cur.fetchall()
+            cur.execute('select email,password from customer where email = (%s)', (email,))
+            customer = cur.fetchall()
+            if programmer == [] and customer == []:
                 return render_template('error_login.html')
-            session['email'] = email
-            session['type'] = 'customer'
-        conn.commit()
-        cur.execute('select id from emails where email=%s', (session['email'],))
-        id = cur.fetchone()[0]
-    return redirect(f'/profile/{id}')
+            elif customer == []:
+                if not (check_password_hash(programmer[0][1], password)):
+                    return render_template('error_login.html')
+                session['email'] = email
+                session['type'] = 'programmer'
+            else:
+                if not (check_password_hash(customer[0][1], password)):
+                    return render_template('error_login.html')
+                session['email'] = email
+                session['type'] = 'customer'
+            conn.commit()
+            cur.execute('select id from emails where email=%s', (session['email'],))
+            id = cur.fetchone()[0]
+        return redirect(f'/profile/{id}')
 
 
 @app.route('/logout')
@@ -198,7 +211,7 @@ def profile():
                     FROM programmer_languages
                     WHERE programmer_email=%s)"""
         sql3 = """
-        SELECT first_name, last_name, description FROM programmer WHERE email=%s"""
+        SELECT first_name, last_name, description, status FROM programmer WHERE email=%s"""
         cur.execute(sql1, (email,))
         areas = cur.fetchall()
         cur.execute(sql2, (email,))
@@ -216,11 +229,12 @@ def profile():
             all_lang.append(i[0])
         name = person[0] + " " + person[1]
         description = person[2]
+        prog_status = person[3]
 
         session['languages'] = all_lang
         session['areas'] = all_areas
 
-        return render_template('profile.html', languages=all_lang, areas=all_areas, name=name, description=description, status=session['type'], admin=admin)
+        return render_template('profile.html', languages=all_lang, areas=all_areas, name=name, description=description, status=session['type'], admin=admin, prog_status = prog_status)
     else:
         sql4 = """
                 SELECT first_name, last_name FROM customer WHERE email=%s"""
@@ -244,6 +258,7 @@ def profile():
                 ord_info = {
                     'id': i[0],
                     'description': i[1],
+                    'status': i[2]
                 }
                 ord_wait.append(ord_info)
             else:
@@ -253,6 +268,7 @@ def profile():
                         ord_info = {
                             'id': i[0],
                             'description': i[1],
+                            'status': i[2]
                         }
                         ord_wait.append(ord_info)
                         k += 1
@@ -369,13 +385,20 @@ def find_order():
         for i in orders_id:
             cur.execute('select * from orders where id = %s ', (i,))
             order = cur.fetchone()
-            order_info = {
-                'id': order[0],
-                'description': order[1],
-                'customer_name': order[2],
-            }
-            all_orders.append(order_info)
-            conn.commit()
+            cur.execute('select status from programmers_orders where orders_id = %s ', (order[0],))
+            status = cur.fetchall()
+            order_stat = 0
+            for j in status:
+                if j[0] == 3:
+                    order_stat = 1
+            if order_stat == 0:
+                order_info = {
+                    'id': order[0],
+                    'description': order[1],
+                    'customer_name': order[2],
+                }
+                all_orders.append(order_info)
+                conn.commit()
 
         return render_template("tasks.html", orders=all_orders)
     else:
@@ -422,6 +445,7 @@ def order_info(order_id):
     cur.execute('select programmer_email, status from programmers_orders where orders_id=%s', (order_id,))
     prog_order = cur.fetchall()
     programmers = []
+    k = 0
     for i in prog_order:
         cur.execute('select first_name, last_name from programmer where email=%s', (i[0],))
         name = cur.fetchone()
@@ -434,8 +458,19 @@ def order_info(order_id):
             'name': name[0] + ' ' + name[1],
             'id': id
         }
+        if i[1] == 3:
+            k = 3
+        if i[1] == 2:
+            k = 2
         programmers.append(prog_info)
 
+
+    if k == 0:
+        order_status = 1 #не завершен
+    elif k == 3:
+        order_status = 3 #завершен
+    else:
+        order_status = 2 #в разработке
     order_info = {
         'id': order_id,
         'description': description,
@@ -445,7 +480,8 @@ def order_info(order_id):
         'areas': [i[0] for i in areas],
         'programmers': programmers,
         'customer_id': customer_id,
-        'user_id': user_id
+        'user_id': user_id,
+        'status': order_status,
     }
     with open('db.json','w') as file:
         json.dump(order_info, file)
@@ -492,7 +528,7 @@ def profile_view(id):
                             FROM programmer_languages
                             WHERE programmer_email=%s)"""
         sql3 = """
-                SELECT first_name, last_name, description,stars FROM programmer WHERE email=%s"""
+                SELECT first_name, last_name, description, stars, status FROM programmer WHERE email=%s"""
         cur.execute(sql1, (email,))
         areas = cur.fetchall()
         cur.execute(sql2, (email,))
@@ -511,6 +547,7 @@ def profile_view(id):
         name = person[0] + " " + person[1]
         description = person[2]
         stars = person[3]
+        prog_status = person[4]
         star = []
         for i in range(5):
             if stars >= 1:
@@ -555,7 +592,7 @@ def profile_view(id):
 
         return render_template('profile.html', languages=all_lang, areas=all_areas, name=name, description=description,
                                status=status, admin=admin, stars=star, orders_wait=ord_wait,
-                               orders_progress=ord_progress, orders_done=ord_done)
+                               orders_progress=ord_progress, orders_done=ord_done, prog_stat=prog_status)
     else:
         sql4 = """
                         SELECT first_name, last_name FROM customer WHERE email=%s"""
@@ -579,6 +616,7 @@ def profile_view(id):
                 ord_info = {
                     'id': i[0],
                     'description': i[1],
+                    'status': i[2]
                 }
                 ord_wait.append(ord_info)
             else:
@@ -588,6 +626,7 @@ def profile_view(id):
                         ord_info = {
                             'id': i[0],
                             'description': i[1],
+                            'status': i[2]
                         }
                         ord_wait.append(ord_info)
                         k += 1

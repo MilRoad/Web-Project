@@ -746,9 +746,14 @@ var BrowserDetect = {
 	                    </div>
     	            </div>
                 </div>
-            {% if status == 'programmer' %}
+            {% if status == 'programmer' and prog_stat == True %}
                 <div class="description text-center">
                     <p style="color: gray;font-size: 100%;font-style: italic;">{{ description }}</p>
+                </div>
+            {% endif %}
+            {% if status == 'programmer' and prog_stat == False %}
+                <div class="description text-center">
+                    <p style="color: gray;font-size: 100%;font-style: italic;">Ваше описание ждет подтверждения от модератора.</p>
                 </div>
             {% endif %}
 				<div class="row">
@@ -784,7 +789,7 @@ var BrowserDetect = {
                         </div>
     	    	</div>
             </div>
-        {% if status == 'customer' %}
+        {#  {% if status == 'customer' %} #}
           <div class="tab-content tab-space">
             <div class="tab-pane active text-center gallery" id="work">
             {% if orders_progress != [] %}
@@ -834,12 +839,20 @@ var BrowserDetect = {
       				<div class="media border p-3">
                   <div class="media-body">
                      <h4>Заказ #{{ order.id }} </h4>
+                      {% if order.status == True %}
                       <p>{{ order.description }}</p>
 
                   </div>
                         <a href="/order_info/{{ order.id }}" style="text-decoration: none;"><span class="label label-warning" >Подробнее</span></a>
                 </div>
                   <br>
+                      {% else %}
+                          <p>Ваш заказ проверяется модератором.</p>
+
+                  </div>
+                          </div>
+
+                  {% endif %}
                 {% endfor %}
             {% else %}
                      <div class="media-body">
@@ -852,7 +865,7 @@ var BrowserDetect = {
 
             </div>
 
-        {% endif %}
+        {#  {% endif %} #}
         </div>
 	</div>
 

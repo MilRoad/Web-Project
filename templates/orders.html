@@ -715,9 +715,9 @@ var BrowserDetect = {
                             {% if status == 'programmer' %}
                                <a href="/take_order/{{ orders.id }}"> <span class="label label-warning" style="background-color: black;">Получить заказ</span></a>
                             {% endif %}
-{#                            {% if status == 'programmer' %}#}
+                         {% if orders.user_id == orders.customer_id %}
                                <a href="/finish_order/{{ orders.id }}"> <span class="label label-warning" style="background-color: black;">Завершить заказ</span></a>
-{#                            {% endif %}#}
+                         {% endif %}
 	                        </div>
 	                    </div>
     	            </div>

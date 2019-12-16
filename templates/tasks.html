@@ -702,6 +702,7 @@ var BrowserDetect = {
                            <br>
                 {% if orders != [] %}
                 {% for order in orders %}
+                 {% if order.status == True %}
                 <div class="media border p-3">
                   <div class="media-body">
                     <h4>Заказ #{{ order.id }}</h4>
@@ -710,6 +711,7 @@ var BrowserDetect = {
                   </div>
                         <a href="/order_info/{{ order.id }}" style="text-decoration: none;"><span class="label label-warning" >Подробнее</span></a>
                 </div>
+                  {% endif %}
                  {% endfor %}
                  {% else %}
                        <div class="media-body">

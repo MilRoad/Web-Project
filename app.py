@@ -14,20 +14,6 @@ cur = conn.cursor()
 def index():
     return render_template('index.html')
 
-#
-# @app.route('/db')
-# def db():
-#     cur.execute("select * from languages where name=%s", ('Python',))
-#     metros_info = cur.fetchall()
-#     json_response = {
-#         'language': []
-#     }
-#     print(metros_info)
-#     for i in metros_info:
-#
-#         json_response['language'].append(i)
-#     return jsonify(json_response)
-
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -79,10 +65,11 @@ def login():
 
         cur.execute('select email, password from admin where email=%s', (email,))
         admin = cur.fetchone()
-        if admin != []:
+        print(admin)
+        if admin != None:
             adm_pass = admin[1]
             if adm_pass == password:
-                return render_template('admin.html')
+                return redirect('/profile_admin')
             else:
                 return render_template('error_login.html')
 
@@ -116,17 +103,6 @@ def logout():
        session.pop('email', None)
        return render_template('index.html')
 
-
-
-# @app.route('/test')
-# def test():
-#     print(session['type'])
-#     if session['type'] == 'programmer':
-#         cur.execute('select description from programmer where email=%s',(session['email'],))
-#         if cur.fetchone()[0] is None:
-#             return redirect('/description')
-#         conn.commit()
-#     return render_template('profile.html')
 
 
 @app.route('/description')
@@ -316,11 +292,12 @@ def orders():
 @app.route('/add_orders', methods=['POST'])
 def add_orders():
     email = session['email']
+
     languages = request.form.getlist('lang')
     areas = request.form.getlist('area')
     description = request.form['description']
 
-    cur.execute('insert into orders (description, customer_email) values (%s, %s) returning id ', (description, email))
+    cur.execute('insert into orders (description, customer_email, status) values (%s, %s, %s) returning id ', (description, email, False))
     order_id = cur.fetchone()[0]
 
     for i in areas:
@@ -396,6 +373,7 @@ def find_order():
                     'id': order[0],
                     'description': order[1],
                     'customer_name': order[2],
+                    'status': order[3]
                 }
                 all_orders.append(order_info)
                 conn.commit()
@@ -567,12 +545,13 @@ def profile_view(id):
         ord_progress = []
         ord_done = []
         for i in orders:
-            cur.execute('select description from orders where id=%s', (i[0],))
+            cur.execute('select description, status from orders where id=%s', (i[0],))
             ord = cur.fetchone()
             if i[1] == 1:
                 ord_info = {
                     'id': i[0],
                     'description': ord[0],
+                    'status': ord[1]
                 }
                 ord_wait.append(ord_info)
             if i[1] == 2:
@@ -608,15 +587,14 @@ def profile_view(id):
         ord_done = []
 
         for i in orders:
-            print(i)
             cur.execute('select status from programmers_orders where orders_id=%s', (i[0],))
             status = cur.fetchall()
-            print(status)
+            print(i[3])
             if status == []:
                 ord_info = {
                     'id': i[0],
                     'description': i[1],
-                    'status': i[2]
+                    'status': i[3]
                 }
                 ord_wait.append(ord_info)
             else:
@@ -626,7 +604,7 @@ def profile_view(id):
                         ord_info = {
                             'id': i[0],
                             'description': i[1],
-                            'status': i[2]
+                            'status': i[3]
                         }
                         ord_wait.append(ord_info)
                         k += 1
@@ -644,13 +622,13 @@ def profile_view(id):
                         }
                         ord_done.append(ord_info)
                         m += 0
+            print(ord_wait)
         return render_template('profile.html', name=name, status=session['type'], orders_wait=ord_wait,
                                orders_progress=ord_progress, orders_done=ord_done, admin=admin)
 
 
 @app.route('/start_order/<int:order_id>/<email>', methods=['GET'])
 def start_order(order_id, email):
-    print(email)
 
     cur.execute('update programmers_orders set status=%s where programmer_email=%s and orders_id=%s  and status=%s',(2,email, order_id, 1))
     conn.commit()
@@ -699,6 +677,85 @@ def stars_programmer(order_id):
 
 
     return redirect(f'/order_info/{order_id}')
+
+@app.route('/add_info', methods=['POST'])
+def add_info():
+    languages = request.form['lang'].split(',')
+    areas = request.form['area'].split(',')
+
+    print(languages, areas)
+
+    for i in areas:
+        cur.execute('select * from areas where name=%s', (i,))
+        area = cur.fetchone()
+        if area == None:
+            cur.execute('insert into areas(name) values (%s)', (i,))
+
+    for i in languages:
+        cur.execute('select * from languages where name=%s', (i,))
+        lang = cur.fetchone()
+        if lang == None:
+            cur.execute('insert into languages(name) values (%s)', (i,))
+
+    conn.commit()
+    return render_template('success_add.html')
+
+@app.route('/profile_admin', methods=['GET'])
+def profile_admin():
+    cur.execute('select email, description from programmer where status=%s',(False,))
+    programmers = cur.fetchall()
+    progs = []
+
+    for programmer in programmers:
+        prog_info = {
+            'email': programmer[0],
+            'description': programmer[1]
+        }
+        progs.append(prog_info)
+
+    cur.execute('select id, description from orders where status=%s', (False,))
+    orders = cur.fetchall()
+    ords = []
+
+    for order in orders:
+        ord_info = {
+            'id': order[0],
+            'description': order[1]
+        }
+        ords.append(ord_info)
+
+    return render_template('profile_admin.html', programmers=progs, orders=ords)
+
+@app.route('/confirm_order/<int:order_id>', methods=['GET'])
+def confirm_order(order_id):
+    cur.execute('update orders set status=%s where id=%s',(True, order_id,))
+    conn.commit()
+
+    return redirect('/profile_admin')
+
+
+@app.route('/decline_order/<int:order_id>', methods=['GET'])
+def decline_order(order_id):
+    cur.execute('delete from orders where id=%s', (order_id,))
+    conn.commit()
+
+    return redirect('/profile_admin')
+
+
+@app.route('/confirm_prog/<email>', methods=['GET'])
+def confirm_prog(email):
+    cur.execute('update programmer set status=%s where email=%s', (True, email,))
+    conn.commit()
+
+    return redirect('/profile_admin')
+
+@app.route('/decline_prog/<email>', methods=['GET'])
+def decline_prog(email):
+    cur.execute('delete from programmer where email=%s', (email,))
+    conn.commit()
+
+    return redirect('/profile_admin')
+
 
 
 if __name__ == '__main__':

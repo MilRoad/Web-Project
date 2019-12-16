@@ -707,23 +707,23 @@ var BrowserDetect = {
 
 
                                 <hr>
-                                <form method="post" action="/add_orders" class="col-md-10 ml-auto mr-auto">
+                                <form method="post" action="/add_info" class="col-md-10 ml-auto mr-auto">
 
                     <div class="column left">
 
                     <div  style="text-align:  center;">
 
-                        <h1>Описание заказа</h1>
+                        <h1>Языки</h1>
                         <div class="form-group">
-                        <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" name="description"></textarea>
+                        <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" name="lang"></textarea>
                       </div>
                     </div>
                         <br><br>
                          <div  style="text-align:  center;">
 
-                        <h1>Описание заказа</h1>
+                        <h1>Сферы</h1>
                         <div class="form-group">
-                        <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" name="description"></textarea>
+                        <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" name="area"></textarea>
                       </div>
                     </div>
 
@@ -775,40 +775,37 @@ var BrowserDetect = {
           <div class="tab-content tab-space">
             <div class="tab-pane active text-center gallery" id="work">
 
-
+            {% for order in orders %}
   				<div class="media border p-3">
                   <div class="media-body">
-                        <h4>Бла </h4>
-                        <p>Алб</p>
+                        <h4>Заказ #{{ order.id }} </h4>
+                        <p>Описание заказа: {{ order.description }}</p>
 
                   </div>
-                     <a href="/order_info/{{ order.id }}" style="text-decoration: none;"><span class="label label-warning">Подробнее</span></a>
+                     <a href="/confirm_order/{{ order.id }}" style="text-decoration: none;"><span class="label label-warning" style="background-color: coral;">Добавить</span></a>
+                    <a href="/decline_order/{{ order.id }}" style="text-decoration: none;"><span class="label label-warning">Отклонить</span></a>
                 </div>
                     <br>
-
-                  <div class="media-body">
-                        <h4>У ваc пока нет заказов в разработке </h4>
-
-                  </div>
+             {% endfor %}
 
   			</div>
 
             <div class="tab-pane text-center gallery" id="finish">
 
 
-      				<div class="media border p-3">
+      				{% for prog in programmers %}
+  				<div class="media border p-3">
                   <div class="media-body">
-                    <h4>Опа </h4>
-                      <p>Апо</p>
+                        <h4>Почта разработчика: {{ prog.email }} </h4>
+                        <p>Описание: {{ prog.description }}</p>
 
                   </div>
-                        <a href="/order_info/{{ order.id }}" style="text-decoration: none;"><span class="label label-warning" >Подробнее</span></a>
+                     <a href="/confirm_prog/{{ prog.email }}" style="text-decoration: none;"><span class="label label-warning" style="background-color: coral;">Добавить</span></a>
+                    <a href="/decline_prog/{{ prog.email }}" style="text-decoration: none;"><span class="label label-warning">Отклонить</span></a>
                 </div>
                     <br>
-
-                     <div class="media-body">
-                        <h4>У ваc пока нет завершенных заказов </h4>
-                  </div>
+             {% endfor %}
+                    <br>
 
 
   			</div>

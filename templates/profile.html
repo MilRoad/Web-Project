@@ -732,7 +732,7 @@ var BrowserDetect = {
                             {% if status == 'customer' and admin%}
                                <a href="/create_orders" style="text-decoration: none;"> <span class="label label-warning"> Добавить заказ</span></a>
                             {% endif %}
-                            {% if status == 'programmer' and admin%}
+                            {% if status == 'programmer' and admin and prog_stat == True%}
                                <a href="/find_order" style="text-decoration: none;"> <span class="label label-warning" style="background-color: black"> Найти заказ</span></a>
                             {% endif %}
                             {% if status == 'programmer' %}
@@ -796,7 +796,7 @@ var BrowserDetect = {
                 {% for order in orders_progress %}
   				<div class="media border p-3">
                   <div class="media-body">
-                        <h4>{{ order.id }} </h4>
+                        <h4>Заказ #{{ order.id }} </h4>
                         <p>{{ order.description }}</p>
 
                   </div>
@@ -817,7 +817,7 @@ var BrowserDetect = {
                 {% for order in orders_done %}
       				<div class="media border p-3">
                   <div class="media-body">
-                    <h4>{{ order.id }} </h4>
+                    <h4>Заказ #{{ order.id }} </h4>
                       <p>{{ order.description }}</p>
 
                   </div>

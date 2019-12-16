@@ -711,11 +711,19 @@ var BrowserDetect = {
                                 {% for area in orders.areas %}
                                          <span class="label label-info" style="background-color: mediumpurple;">{{ area }}</span>
                                 {% endfor %}
+                            {% if orders.status == 2 %}
+                                <br> <br> <br>
+                            <h4 style="background-color: coral;">В разработке...</h4>
+                            {% endif %}
+                            {% if orders.status == 3 %}
+                                <br> <br> <br>
+                            <h4 style="background-color: gray;">Завершен</h4>
+                            {% endif %}
                                 <hr>
-                            {% if status == 'programmer' %}
+                            {% if status == 'programmer' and (orders.status == 1 or orders.status == 2) %}
                                <a href="/take_order/{{ orders.id }}"> <span class="label label-warning" style="background-color: black;">Получить заказ</span></a>
                             {% endif %}
-                         {% if orders.user_id == orders.customer_id %}
+                         {% if orders.user_id == orders.customer_id and (orders.status == 1 or orders.status == 2) %}
                                <a href="/finish_order/{{ orders.id }}"> <span class="label label-warning" style="background-color: black;">Завершить заказ</span></a>
                          {% endif %}
 	                        </div>
@@ -814,9 +822,6 @@ var BrowserDetect = {
 
                   </div>
                         <a href="/profile/{{ prog.id }}" style="text-decoration: none;"><span class="label label-warning" >Открыть профиль</span></a>
-                        {% if orders.user_id == orders.customer_id %}
-                        <a href="/start_order/{{ orders.id }}/{{ prog.email }}" style="text-decoration: none;"><span class="label label-warning" style="background-color: coral;">Назначить</span></a>
-                        {% endif %}
                 </div>
                         <br>
             {% endif %}

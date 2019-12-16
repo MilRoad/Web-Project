@@ -34,14 +34,16 @@ def github_login():
             return render_template('github.html', email=email)
         else:
             if user[2] == 'False':
+                conn.commit()
                 return render_template('github.html', email=email)
             else:
                 id = user[0]
+                conn.commit()
                 return redirect(f'/profile/{id}')
     return '<h1> Request failed </h1>'
 
 
-@app.route('/add_github')
+@app.route('/add_github', methods=['POST'])
 def add_github():
     first_name = request.form['first_name']
     last_name = request.form['last_name']
@@ -56,7 +58,7 @@ def add_github():
         ('programmer',email))
     conn.commit()
 
-    return redirect('/interests')
+    return redirect('/description')
 
 
 
@@ -151,7 +153,7 @@ def login():
 def logout():
        # remove the username from the session if it is there
        session.pop('email', None)
-       return render_template('index.html')
+       return redirect('/')
 
 
 
@@ -538,6 +540,7 @@ def take_order(order_id):
 
 @app.route('/profile/<int:id>', methods=['GET'])
 def profile_view(id):
+
     cur.execute('select email, status from emails where id=%s',(id,))
     person = cur.fetchone()
     email = person[0]
@@ -578,6 +581,8 @@ def profile_view(id):
             all_areas.append(i[0])
         for i in langs:
             all_lang.append(i[0])
+        if len(all_areas) == 0 and len(all_lang) == 0:
+            return redirect('/description')
         name = person[0] + " " + person[1]
         description = person[2]
         stars = person[3]

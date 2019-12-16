@@ -22,9 +22,41 @@ def github_login():
     account_info = github.get('/user')
     if account_info.ok:
         account_info_json = account_info.json()
-        print(account_info_json)
-        return '<h1> Your github name is {} </h1>'.format(account_info_json['login'])
+        email = account_info_json['login']
+        session['email'] = email
+        session['type'] = 'programmer'
+        cur.execute('select * from emails where email=%s', (email,))
+        user = cur.fetchone()
+        if user == None:
+            status = 'False'
+            cur.execute('insert into emails (email, status) values (%s, %s) returning id', (email, status))
+            conn.commit()
+            return render_template('github.html', email=email)
+        else:
+            if user[2] == 'False':
+                return render_template('github.html', email=email)
+            else:
+                id = user[0]
+                return redirect(f'/profile/{id}')
     return '<h1> Request failed </h1>'
+
+
+@app.route('/add_github')
+def add_github():
+    first_name = request.form['first_name']
+    last_name = request.form['last_name']
+    phone = request.form['phone']
+    email = session['email']
+
+    cur.execute('insert into programmer (email, password, first_name, last_name, phone, stars, status) values (%s, %s,%s,%s,%s, %s, %s)',
+                (email, 'github', first_name, last_name, phone, 0, False))
+    conn.commit()
+
+    cur.execute('update emails set status=%s where email=%s',
+        ('programmer',email))
+    conn.commit()
+
+    return redirect('/interests')
 
 
 
@@ -311,6 +343,9 @@ def orders():
 def add_orders():
     email = session['email']
 
+    cur.execute('select id from emails where email=%s', (email,))
+    cust_id = cur.fetchone()[0]
+
     languages = request.form.getlist('lang')
     areas = request.form.getlist('area')
     description = request.form['description']
@@ -339,7 +374,7 @@ def add_orders():
                     'insert into orders_languages (orders_id, languages_id) values (%s, %s)',
                     (order_id, i))
     conn.commit()
-    return redirect('/profile')
+    return redirect(f'/profile/{cust_id}')
 
 @app.route('/find_order', methods=['GET'])
 def find_order():

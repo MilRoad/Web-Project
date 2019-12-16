@@ -1,14 +1,32 @@
 import psycopg2
-from flask import Flask, render_template, request, jsonify, session, redirect
+from flask import Flask, render_template, request, session, redirect, url_for
 import constant
 from werkzeug.security import generate_password_hash,  check_password_hash
 import json
+from flask_dance.contrib.github import make_github_blueprint, github
 
 app = Flask(__name__)
-
-
+app.config['SECRET_KEY'] = 'thisissupposedtobesecretkey'
 conn = psycopg2.connect(host=constant.host, dbname=constant.dbname, user=constant.username, password=constant.password)
 cur = conn.cursor()
+
+github_blueprint = make_github_blueprint(client_id='7cb78323c53d79e6775e', client_secret='996e19b937a943f053cfddcfcd5977a9d2d604fa')
+
+app.register_blueprint(github_blueprint, url_prefix='/github_login')
+
+
+@app.route('/github')
+def github_login():
+    if not github.authorized:
+        return redirect(url_for('github.login'))
+    account_info = github.get('/user')
+    if account_info.ok:
+        account_info_json = account_info.json()
+        print(account_info_json)
+        return '<h1> Your github name is {} </h1>'.format(account_info_json['login'])
+    return '<h1> Request failed </h1>'
+
+
 
 @app.route('/')
 def index():

@@ -822,6 +822,20 @@ var BrowserDetect = {
 
                   </div>
                         <a href="/profile/{{ prog.id }}" style="text-decoration: none;"><span class="label label-warning" >Открыть профиль</span></a>
+                        <button type="submit" class="label label-warning" style="background-color: coral; color: white;"
+                            onClick="(function(){
+                            const url = 'https://e5kuprecmc.execute-api.us-east-1.amazonaws.com/message/sendmessage';
+                            fetch(url, {
+                            method : 'POST',
+                            mode: 'no-cors',
+                            body : JSON.stringify({
+                            phoneNumber : '{{ prog.phone }}',
+                            message: `Вы назначены на заказ #{{ orders.id }}. Свяжитесь с заказчиком по номеру {{ orders.cust_phone }}.` })
+                            }).then(
+                            response => alert('Ваше сообщение отправлено!'))
+                            })();return false;"
+                            > Отправить сообщение </button>
+
                 </div>
                         <br>
             {% endif %}

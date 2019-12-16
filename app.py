@@ -390,9 +390,10 @@ def order_info(order_id):
     description = order[1]
     customer_email = order[2]
 
-    cur.execute('select first_name, last_name from customer where email = %s', (customer_email,))
+    cur.execute('select first_name, last_name, phone from customer where email = %s', (customer_email,))
     customer = cur.fetchone()
     customer_name = customer[0] + " " + customer[1]
+    cust_phone = '+7' + customer[2]
 
     cur.execute('select id from emails where email = %s', (customer_email,))
     customer_id = cur.fetchone()[0]
@@ -425,7 +426,7 @@ def order_info(order_id):
     programmers = []
     k = 0
     for i in prog_order:
-        cur.execute('select first_name, last_name from programmer where email=%s', (i[0],))
+        cur.execute('select first_name, last_name, phone from programmer where email=%s', (i[0],))
         name = cur.fetchone()
         cur.execute('select id from emails where email=%s', (i[0],))
         id = cur.fetchone()[0]
@@ -434,7 +435,8 @@ def order_info(order_id):
             'email': i[0],
             'status': i[1],
             'name': name[0] + ' ' + name[1],
-            'id': id
+            'id': id,
+            'phone': '+7' + name[2]
         }
         if i[1] == 3:
             k = 3
@@ -460,6 +462,7 @@ def order_info(order_id):
         'customer_id': customer_id,
         'user_id': user_id,
         'status': order_status,
+        'cust_phone': cust_phone
     }
     with open('db.json','w') as file:
         json.dump(order_info, file)
@@ -629,7 +632,6 @@ def profile_view(id):
 
 @app.route('/start_order/<int:order_id>/<email>', methods=['GET'])
 def start_order(order_id, email):
-
     cur.execute('update programmers_orders set status=%s where programmer_email=%s and orders_id=%s  and status=%s',(2,email, order_id, 1))
     conn.commit()
     return redirect(f'/order_info/{order_id}')

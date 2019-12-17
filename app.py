@@ -4,6 +4,7 @@ import constant
 from werkzeug.security import generate_password_hash,  check_password_hash
 import json
 from flask_dance.contrib.github import make_github_blueprint, github
+import requests
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'thisissupposedtobesecretkey'
@@ -690,8 +691,20 @@ def profile_view(id):
 
 @app.route('/start_order/<int:order_id>/<email>', methods=['GET'])
 def start_order(order_id, email):
-    cur.execute('update programmers_orders set status=%s where programmer_email=%s and orders_id=%s  and status=%s',(2,email, order_id, 1))
-    conn.commit()
+    try:
+        cur.execute('update programmers_orders set status=%s where programmer_email=%s and orders_id=%s  and status=%s',(2,email, order_id, 1))
+        conn.commit()
+        cur.execute('select phone from programmer where email=%s',(email,))
+        phone = '+7' + cur.fetchone()[0]
+        data = {
+            'phoneNumber': phone,
+            'message': f'Вы назначены на заказ {order_id}'
+        }
+
+        a = requests.post('https://e5kuprecmc.execute-api.us-east-1.amazonaws.com/message/sendmessage', json=data, headers={'Content-type': 'application/json'})
+
+    except:
+        return 'Error 500'
     return redirect(f'/order_info/{order_id}')
 
 @app.route('/stars_order/<int:order_id>', methods=['GET'])

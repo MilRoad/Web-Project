@@ -795,7 +795,9 @@ var BrowserDetect = {
                   </div>
                         <a href="/profile/{{ prog.id }}" style="text-decoration: none;"><span class="label label-warning" >Открыть профиль</span></a>
                         {% if orders.user_id == orders.customer_id %}
-                        <a href="/start_order/{{ orders.id }}/{{ prog.email }}" style="text-decoration: none;"><span class="label label-warning" style="background-color: coral;">Назначить</span></a>
+
+                        <a href="/start_order/{{ orders.id }}/{{ prog.email }}" class="label label-warning" style="background-color: coral; color: white;"> Назначить </a>
+
                         {% endif %}
                 </div>
                         <br>

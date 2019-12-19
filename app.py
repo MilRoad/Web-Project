@@ -695,13 +695,16 @@ def start_order(order_id, email):
         cur.execute('update programmers_orders set status=%s where programmer_email=%s and orders_id=%s  and status=%s',(2,email, order_id, 1))
         conn.commit()
         cur.execute('select phone from programmer where email=%s',(email,))
+
         phone = '+7' + cur.fetchone()[0]
+        print(phone)
         data = {
             'phoneNumber': phone,
             'message': f'Вы назначены на заказ {order_id}'
         }
 
-        a = requests.post('https://e5kuprecmc.execute-api.us-east-1.amazonaws.com/message/sendmessage', json=data, headers={'Content-type': 'application/json'})
+        a = requests.post('https://6q59pejjqk.execute-api.us-west-2.amazonaws.com/launchStage/userinfo', json=data, headers={'Content-type': 'application/json'})
+        print(a)
 
     except:
         return 'Error 500'
